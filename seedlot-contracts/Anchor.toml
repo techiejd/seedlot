@@ -5,7 +5,7 @@ seeds = false
 skip-lint = false
 
 [programs.localnet]
-seedlot_contracts = "842Eo9smCu8upye7yjHDBYrk8FF8utZPgPDYpMaJZsxT"
+seedlot_contracts = "iFDyfQUC16yjtNZ1jAPaYfVWdzsqhsHC8ekiE2sJbX4"
 
 [registry]
 url = "https://api.apr.dev"
@@ -15,4 +15,4 @@ cluster = "Localnet"
 wallet = "/Users/juandominguez/.config/solana/id.json"
 
 [scripts]
-test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
+test = "yarn run jest --preset ts-jest"

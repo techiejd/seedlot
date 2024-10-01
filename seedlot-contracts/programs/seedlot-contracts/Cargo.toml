@@ -9,6 +9,7 @@ crate-type = ["cdylib", "lib"]
 name = "seedlot_contracts"
 
 [features]
+idl-build = ["anchor-lang/idl-build", "anchor-spl/idl-build"]
 no-entrypoint = []
 no-idl = []
 no-log-ix-name = []
@@ -16,4 +17,12 @@ cpi = ["no-entrypoint"]
 default = []
 
 [dependencies]
-anchor-lang = "0.29.0"
+anchor-lang = "0.30.1"
+anchor-spl = "0.30.1"
+session-keys = { version = "2.0.5", features = ["no-entrypoint"] }
+solana-program = "=1.18.11"
+spl-token-2022 = { version = "3.0.0", features = [ "no-entrypoint" ] }
+spl-token = { version = "4.0.0", features = [ "no-entrypoint" ] }
+spl-token-metadata-interface = { version = "0.3.5"}
+spl-type-length-value = "0.4.6"
+spl-associated-token-account = "=3.0.4"
