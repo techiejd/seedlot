@@ -88,11 +88,11 @@ const convertToCertificationTier = (tier: number) => {
   } as CertificationTier;
 };
 
-/*describe("initializing", () => {
-let admin: web3.Keypair;
-let contractPK: web3.PublicKey;
-let contract: Contract;
-let mint: web3.Keypair;
+describe("initializing", () => {
+  let admin: web3.Keypair;
+  let contractPK: web3.PublicKey;
+  let contract: Contract;
+  let mint: web3.Keypair;
   beforeAll(async () => {
     admin = web3.Keypair.generate();
     await airdrop(admin.publicKey);
@@ -207,7 +207,8 @@ let mint: web3.Keypair;
         const extensionTypes = getExtensionTypes(mintInfo.tlvData);
         expect(extensionTypes).toContain(ExtensionType.NonTransferable);
       });
-      it("Sets the certification mint with correct Token Metadata settings", async () => {
+      test.todo(
+        "Sets the certification mint with correct Token Metadata settings" /*, async () => {
         const metadata = await getTokenMetadata(
           program.provider.connection,
           contract.certificationMint,
@@ -217,13 +218,14 @@ let mint: web3.Keypair;
         expect(metadata.name).toEqual("Seedlot Certification");
         expect(metadata.symbol).toEqual("SEEDLOT-CERT");
         expect(metadata.uri).toEqual("");
-      });
+      }*/
+      );
     });
     test.todo(
       "Sets the percentage that the managers will receive in taking on an order"
     );
   });
-});*/
+});
 
 const initialize = async () => {
   const admin = web3.Keypair.generate();
