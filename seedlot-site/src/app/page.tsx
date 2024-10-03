@@ -31,7 +31,7 @@ export default function Home() {
         <ul>
           <li>
             <strong>Seedlot Contracts:</strong>{" "}
-            iFDyfQUC16yjtNZ1jAPaYfVWdzsqhsHC8ekiE2sJbX4
+            Bj5esFf6t1g1nRRw2n12NDuad4fxFoXRavFnC1daX2Zk
           </li>
         </ul>
       </div>
