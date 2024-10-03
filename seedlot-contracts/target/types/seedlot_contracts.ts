@@ -5,7 +5,7 @@
  * IDL can be found at `target/idl/seedlot_contracts.json`.
  */
 export type SeedlotContracts = {
-  "address": "2HTz6TXN6ERPGS3d5ZpYMjjR6bgpyTh1LjaXB543vEmp",
+  "address": "HHERmxZrLv5kri1VSc4zEbgwJnS8iJWximBSpNN9wH6M",
   "metadata": {
     "name": "seedlotContracts",
     "version": "0.1.0",

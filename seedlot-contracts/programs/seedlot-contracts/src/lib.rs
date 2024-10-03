@@ -6,7 +6,7 @@ use anchor_spl::token_2022::Token2022;
 use anchor_spl::token_interface::{Mint, TokenAccount};
 use solana_program::program_option::COption;
 
-declare_id!("2HTz6TXN6ERPGS3d5ZpYMjjR6bgpyTh1LjaXB543vEmp");
+declare_id!("HHERmxZrLv5kri1VSc4zEbgwJnS8iJWximBSpNN9wH6M");
 
 #[program]
 pub mod seedlot_contracts {
@@ -75,6 +75,20 @@ pub mod seedlot_contracts {
         use super::*;
 
         pub fn mint_certification_tokens(ctx: &Context<Certify>, amount: u64) -> Result<()> {
+            // Thaw the account before minting
+            anchor_spl::token_2022::thaw_account(CpiContext::new_with_signer(
+                ctx.accounts.token_program.to_account_info(),
+                anchor_spl::token_2022::ThawAccount {
+                    account: ctx.accounts.manager_to.to_account_info(),
+                    mint: ctx.accounts.certification_mint.to_account_info(),
+                    authority: ctx.accounts.contract.to_account_info(),
+                },
+                &[&[
+                    b"contract",
+                    ctx.accounts.admin.key().as_ref(),
+                    &[ctx.bumps.contract],
+                ]],
+            ))?;
             anchor_spl::token_2022::mint_to(
                 CpiContext::new_with_signer(
                     ctx.accounts.token_program.to_account_info(),
@@ -91,6 +105,20 @@ pub mod seedlot_contracts {
                 ),
                 amount,
             )?;
+            // Freeze the account after minting
+            anchor_spl::token_2022::freeze_account(CpiContext::new_with_signer(
+                ctx.accounts.token_program.to_account_info(),
+                anchor_spl::token_2022::FreezeAccount {
+                    account: ctx.accounts.manager_to.to_account_info(),
+                    mint: ctx.accounts.certification_mint.to_account_info(),
+                    authority: ctx.accounts.contract.to_account_info(),
+                },
+                &[&[
+                    b"contract",
+                    ctx.accounts.admin.key().as_ref(),
+                    &[ctx.bumps.contract],
+                ]],
+            ))?;
             Ok(())
         }
     }
@@ -109,6 +137,7 @@ pub struct Initialize<'info> {
     #[account(
         mint::decimals = 0,
         mint::authority = contract,
+        mint::freeze_authority = contract,
         constraint = mint.supply == 0,
     )]
     pub mint: InterfaceAccount<'info, Mint>,

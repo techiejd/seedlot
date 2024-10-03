@@ -13,6 +13,10 @@ import {
   getAssociatedTokenAddress,
   ASSOCIATED_TOKEN_PROGRAM_ID,
   getAccount,
+  createTransferInstruction,
+  createBurnInstruction,
+  createInitializeDefaultAccountStateInstruction,
+  AccountState,
 } from "@solana/spl-token";
 
 anchor.setProvider(anchor.AnchorProvider.env());
@@ -26,7 +30,7 @@ const makeMint = async (admin: web3.Keypair, contractPK: web3.PublicKey) => {
   const mint = web3.Keypair.generate();
   const mintPK = mint.publicKey;
 
-  const mintSpace = getMintLen([ExtensionType.NonTransferable]);
+  const mintSpace = getMintLen([ExtensionType.DefaultAccountState]);
   const lamports =
     await program.provider.connection.getMinimumBalanceForRentExemption(
       mintSpace
@@ -40,15 +44,16 @@ const makeMint = async (admin: web3.Keypair, contractPK: web3.PublicKey) => {
       lamports,
       programId: TOKEN_2022_PROGRAM_ID,
     }),
-    createInitializeNonTransferableMintInstruction(
+    createInitializeDefaultAccountStateInstruction(
       mintPK,
+      AccountState.Frozen,
       TOKEN_2022_PROGRAM_ID
     ),
     createInitializeMintInstruction(
       mintPK,
       0,
       contractPK,
-      null,
+      contractPK,
       TOKEN_2022_PROGRAM_ID
     )
   );
@@ -191,6 +196,7 @@ describe("initializing", () => {
         expect(contract.certificationMint).toEqual(mint.publicKey);
       });
       it("Sets the certification mint with correct Token settings", async () => {
+        // TODO(techiejd): Move this to a test for makeMint
         const mintInfo = await getMint(
           program.provider.connection,
           contract.certificationMint,
@@ -198,14 +204,14 @@ describe("initializing", () => {
           TOKEN_2022_PROGRAM_ID
         );
 
-        expect(mintInfo.freezeAuthority).toBeNull();
+        expect(mintInfo.freezeAuthority).toEqual(contractPK);
         expect(mintInfo.mintAuthority).toEqual(contractPK);
         expect(mintInfo.supply).toEqual(BigInt(0));
         expect(mintInfo.isInitialized).toBe(true);
         expect(mintInfo.decimals).toEqual(0);
 
         const extensionTypes = getExtensionTypes(mintInfo.tlvData);
-        expect(extensionTypes).toContain(ExtensionType.NonTransferable);
+        expect(extensionTypes).toContain(ExtensionType.DefaultAccountState);
       });
       test.todo(
         "Sets the certification mint with correct Token Metadata settings" /*, async () => {
@@ -389,6 +395,93 @@ describe("Certifying", () => {
           .rpc()
       ).rejects.toThrow("Error Code: CertificationsMustIncreaseByOneTier");
     });
+  });
+  it("Cannot be transferred", async () => {
+    const accounts = {
+      admin: admin.publicKey,
+      contract: contractPK,
+      tokenProgram: TOKEN_2022_PROGRAM_ID,
+      managerTo: managerAta,
+      certificationMint: mint.publicKey,
+      associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+      systemProgram: web3.SystemProgram.programId,
+      manager: manager.publicKey,
+    };
+    await program.methods
+      .certify({ tier1: {} })
+      .accounts(accounts)
+      .signers([admin])
+      .rpc();
+    await airdrop(manager.publicKey);
+    const toManager = web3.Keypair.generate();
+    const toManagerAta = await getAssociatedTokenAddress(
+      mint.publicKey,
+      toManager.publicKey,
+      false,
+      TOKEN_2022_PROGRAM_ID
+    );
+    const transferInstruction = createTransferInstruction(
+      managerAta,
+      toManagerAta,
+      manager.publicKey,
+      1,
+      [],
+      TOKEN_2022_PROGRAM_ID
+    );
+    await expect(
+      web3.sendAndConfirmTransaction(
+        program.provider.connection,
+        new web3.Transaction().add(transferInstruction),
+        [manager]
+      )
+    ).rejects.toThrow("Account is frozen");
+    const managerTokenAccount = await getAccount(
+      program.provider.connection,
+      managerAta,
+      undefined,
+      TOKEN_2022_PROGRAM_ID
+    );
+    expect(managerTokenAccount.amount).toBe(1n);
+  });
+  it("Cannot be burned", async () => {
+    const accounts = {
+      admin: admin.publicKey,
+      contract: contractPK,
+      tokenProgram: TOKEN_2022_PROGRAM_ID,
+      managerTo: managerAta,
+      certificationMint: mint.publicKey,
+      associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+      systemProgram: web3.SystemProgram.programId,
+      manager: manager.publicKey,
+    };
+    await program.methods
+      .certify({ tier1: {} })
+      .accounts(accounts)
+      .signers([admin])
+      .rpc();
+    await airdrop(manager.publicKey);
+    const burnInstruction = createBurnInstruction(
+      managerAta,
+      mint.publicKey,
+      manager.publicKey,
+      1,
+      [],
+      TOKEN_2022_PROGRAM_ID
+    );
+    await expect(
+      web3.sendAndConfirmTransaction(
+        program.provider.connection,
+        new web3.Transaction().add(burnInstruction),
+        [manager]
+      )
+    ).rejects.toThrow("Account is frozen");
+    const managerTokenAccount = await getAccount(
+      program.provider.connection,
+      managerAta,
+      undefined,
+      TOKEN_2022_PROGRAM_ID
+    );
+    expect(managerTokenAccount.amount).toBe(1n);
   });
 });
 
