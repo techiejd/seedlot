@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
 import { WalletProvider } from "./walletProvider";
+import { useSearchParams } from "next/navigation";
+import Nav from "@/components/Nav";
+import SideNav from "@/components/SideNav";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -20,6 +23,11 @@ export const metadata: Metadata = {
     "From Soil to Sip: Take Part in The Coffee Supply Chain with tree investments recorded on the blockchain",
 };
 
+
+
+const searchParams = useSearchParams();
+const role = searchParams.get("role") || "defaultRole";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -30,6 +38,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        <SideNav role={role} />
         <WalletProvider>{children}</WalletProvider>
       </body>
     </html>
