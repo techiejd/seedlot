@@ -306,7 +306,7 @@ describe("Certifying", () => {
     };
     beforeEach(async () => {
       accounts = {
-        admin: admin.publicKey, // Use manager instead of admin
+        admin: admin.publicKey,
         contract: contractPK,
         tokenProgram: TOKEN_2022_PROGRAM_ID,
         managerTo: managerAta,
@@ -317,9 +317,9 @@ describe("Certifying", () => {
       };
     });
     it("Can certify at tiers 1 - 4", async () => {
-      for (let i = 1; i < 5; i++) {
+      for (let tier = 1; tier < 5; tier++) {
         const txHash = await program.methods
-          .certify(convertToCertificationTier(i))
+          .certify(convertToCertificationTier(tier))
           .accounts(accounts)
           .signers([admin])
           .rpc();
@@ -331,13 +331,13 @@ describe("Certifying", () => {
           undefined,
           TOKEN_2022_PROGRAM_ID
         );
-        expect(Number(managerTokenAccount.amount)).toBe(i);
+        expect(Number(managerTokenAccount.amount)).toBe(tier);
       }
     });
     it("Fails if you try to certify as decertified", async () => {
-      for (let i = 1; i < 5; i++) {
+      for (let tier = 1; tier < 5; tier++) {
         const txHash = await program.methods
-          .certify(convertToCertificationTier(i))
+          .certify(convertToCertificationTier(tier))
           .accounts(accounts)
           .signers([admin])
           .rpc();
@@ -393,12 +393,144 @@ describe("Certifying", () => {
 });
 
 describe("Decertifying", () => {
+  const DECERTIFIED_TIER_TOKEN_AMOUNT = 5n;
+  let admin: web3.Keypair;
+  let contractPK: web3.PublicKey;
+  let mint: web3.Keypair;
+  beforeAll(async () => {
+    ({ admin, contractPK, mint } = await initialize());
+  });
   test.todo("Only allows admin to decertify.");
   test.todo("Admin and manager need to be different.");
-  test.todo("Can decertify at any tier.");
-  test.todo("Cannot decertify if already decertified.");
-  test.todo("Cannot certify if already decertified.");
-  test.todo("Allows for non certified manager to be decertified.");
+  it("Allows for non certified manager to be decertified.", async () => {
+    const manager = web3.Keypair.generate();
+    const managerAta = await getAssociatedTokenAddress(
+      mint.publicKey,
+      manager.publicKey,
+      false,
+      TOKEN_2022_PROGRAM_ID
+    );
+    const accounts = {
+      admin: admin.publicKey,
+      contract: contractPK,
+      tokenProgram: TOKEN_2022_PROGRAM_ID,
+      managerTo: managerAta,
+      certificationMint: mint.publicKey,
+      associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+      systemProgram: web3.SystemProgram.programId,
+      manager: manager.publicKey,
+    };
+    const txHash = await program.methods
+      .decertify()
+      .accounts(accounts)
+      .signers([admin])
+      .rpc();
+    await confirmTx(txHash);
+    const managerTokenAccount = await getAccount(
+      program.provider.connection,
+      managerAta,
+      undefined,
+      TOKEN_2022_PROGRAM_ID
+    );
+    expect(managerTokenAccount.amount).toBe(DECERTIFIED_TIER_TOKEN_AMOUNT);
+  });
+  it("Can decertify at any tier.", async () => {
+    await Promise.all(
+      [1, 2, 3, 4].map(async (tierUnderTest) => {
+        {
+          const manager = web3.Keypair.generate();
+          const managerAta = await getAssociatedTokenAddress(
+            mint.publicKey,
+            manager.publicKey,
+            false,
+            TOKEN_2022_PROGRAM_ID
+          );
+          const accounts = {
+            admin: admin.publicKey,
+            contract: contractPK,
+            tokenProgram: TOKEN_2022_PROGRAM_ID,
+            managerTo: managerAta,
+            certificationMint: mint.publicKey,
+            associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+            systemProgram: web3.SystemProgram.programId,
+            manager: manager.publicKey,
+          };
+          for (let tier = 1; tier <= tierUnderTest; tier++) {
+            await program.methods
+              .certify(convertToCertificationTier(tier))
+              .accounts(accounts)
+              .signers([admin])
+              .rpc();
+          }
+          const txHash = await program.methods
+            .decertify()
+            .accounts(accounts)
+            .signers([admin])
+            .rpc();
+          await confirmTx(txHash);
+          const managerTokenAccount = await getAccount(
+            program.provider.connection,
+            managerAta,
+            undefined,
+            TOKEN_2022_PROGRAM_ID
+          );
+          expect(managerTokenAccount.amount).toBe(
+            DECERTIFIED_TIER_TOKEN_AMOUNT
+          );
+        }
+      })
+    );
+  });
+  it("Cannot decertify if already decertified.", async () => {
+    const manager = web3.Keypair.generate();
+    const managerAta = await getAssociatedTokenAddress(
+      mint.publicKey,
+      manager.publicKey,
+      false,
+      TOKEN_2022_PROGRAM_ID
+    );
+    const accounts = {
+      admin: admin.publicKey,
+      contract: contractPK,
+      tokenProgram: TOKEN_2022_PROGRAM_ID,
+      managerTo: managerAta,
+      certificationMint: mint.publicKey,
+      associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+      systemProgram: web3.SystemProgram.programId,
+      manager: manager.publicKey,
+    };
+    await program.methods.decertify().accounts(accounts).signers([admin]).rpc();
+    await expect(
+      program.methods.decertify().accounts(accounts).signers([admin]).rpc()
+    ).rejects.toThrow("Error Code: ManagerAlreadyDecertified");
+  });
+  it("Cannot certify if already decertified.", async () => {
+    const manager = web3.Keypair.generate();
+    const managerAta = await getAssociatedTokenAddress(
+      mint.publicKey,
+      manager.publicKey,
+      false,
+      TOKEN_2022_PROGRAM_ID
+    );
+    const accounts = {
+      admin: admin.publicKey,
+      contract: contractPK,
+      tokenProgram: TOKEN_2022_PROGRAM_ID,
+      managerTo: managerAta,
+      certificationMint: mint.publicKey,
+      associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+      systemProgram: web3.SystemProgram.programId,
+      manager: manager.publicKey,
+    };
+    await program.methods.decertify().accounts(accounts).signers([admin]).rpc();
+    await expect(
+      program.methods
+        .certify({ tier1: {} })
+        .accounts(accounts)
+        .signers([admin])
+        .rpc()
+    ).rejects.toThrow("Error Code: ManagerAlreadyDecertified");
+  });
 });
 
 describe("Ordering", () => {

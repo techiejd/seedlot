@@ -6,7 +6,7 @@ use anchor_spl::token_2022::Token2022;
 use anchor_spl::token_interface::{Mint, TokenAccount};
 use solana_program::program_option::COption;
 
-declare_id!("Bj5esFf6t1g1nRRw2n12NDuad4fxFoXRavFnC1daX2Zk");
+declare_id!("2HTz6TXN6ERPGS3d5ZpYMjjR6bgpyTh1LjaXB543vEmp");
 
 #[program]
 pub mod seedlot_contracts {
@@ -39,31 +39,60 @@ pub mod seedlot_contracts {
         );
         let new_tier_number = new_tier as u64;
         let current_certification = ctx.accounts.manager_to.amount;
+        require_neq!(
+            current_certification,
+            CertificationTier::Decertified as u64,
+            SeedlotContractsError::ManagerAlreadyDecertified
+        );
         require_eq!(
             current_certification + 1,
             new_tier_number,
             SeedlotContractsError::CertificationsMustIncreaseByOneTier
         );
 
-        // Mint one token to the manager's token account
-        anchor_spl::token_2022::mint_to(
-            CpiContext::new_with_signer(
-                ctx.accounts.token_program.to_account_info(),
-                anchor_spl::token_2022::MintTo {
-                    mint: ctx.accounts.certification_mint.to_account_info(),
-                    to: ctx.accounts.manager_to.to_account_info(),
-                    authority: ctx.accounts.contract.to_account_info(),
-                },
-                &[&[
-                    b"contract",
-                    ctx.accounts.admin.key().as_ref(),
-                    &[ctx.bumps.contract],
-                ]],
-            ),
-            1,
-        )?;
+        // Mint one token to the manager's token account to show they are certified or increase their tier
+        utils::mint_certification_tokens(&ctx, 1)?;
 
         Ok(())
+    }
+
+    pub fn decertify(ctx: Context<Certify>) -> Result<()> {
+        let decertified_tier_as_u64 = CertificationTier::Decertified as u64;
+        require_neq!(
+            ctx.accounts.manager_to.amount,
+            decertified_tier_as_u64,
+            SeedlotContractsError::ManagerAlreadyDecertified
+        );
+        let current_number_of_certification_tokens = ctx.accounts.manager_to.amount;
+        let number_of_tokens_needed_to_decertify =
+            decertified_tier_as_u64 - current_number_of_certification_tokens;
+
+        utils::mint_certification_tokens(&ctx, number_of_tokens_needed_to_decertify)?;
+        Ok(())
+    }
+
+    mod utils {
+        use super::*;
+
+        pub fn mint_certification_tokens(ctx: &Context<Certify>, amount: u64) -> Result<()> {
+            anchor_spl::token_2022::mint_to(
+                CpiContext::new_with_signer(
+                    ctx.accounts.token_program.to_account_info(),
+                    anchor_spl::token_2022::MintTo {
+                        mint: ctx.accounts.certification_mint.to_account_info(),
+                        to: ctx.accounts.manager_to.to_account_info(),
+                        authority: ctx.accounts.contract.to_account_info(),
+                    },
+                    &[&[
+                        b"contract",
+                        ctx.accounts.admin.key().as_ref(),
+                        &[ctx.bumps.contract],
+                    ]],
+                ),
+                amount,
+            )?;
+            Ok(())
+        }
     }
 }
 
@@ -152,4 +181,5 @@ pub enum SeedlotContractsError {
     CertificationsMustIncreaseByOneTier,
     CannotCertifyAboveTierFour,
     NoCertificationTierZero,
+    ManagerAlreadyDecertified,
 }
