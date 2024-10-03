@@ -1,7 +1,9 @@
-
 .anchor
 .DS_Store
-target
+target/**/*
+# But don't ignore the types directory
+!target/types
+!target/types/*
 **/*.rs.bk
 node_modules
 test-ledger
