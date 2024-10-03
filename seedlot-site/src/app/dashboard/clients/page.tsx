@@ -1,7 +1,7 @@
-export default function ManagerPage() {
+export default function ClientsPage() {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen">
-      <h1 className="text-4xl font-bold">Manager Page</h1>
+      <h1 className="text-4xl font-bold">Clients List</h1>
     </div>
   );
 }

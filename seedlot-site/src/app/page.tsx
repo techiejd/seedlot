@@ -7,6 +7,8 @@ export default function Home() {
     <div className="flex flex-col items-center justify-center min-h-screen">
       <h1 className="text-4xl font-bold mb-8">Seedlot</h1>
       <WalletMultiButton className="mb-8" />
+      
+      <Link href="/dashboard" className="text-blue-500 hover:underline">Dashboard</Link>
       <nav className="mb-8">
         <ul className="flex space-x-4">
           <li>
