@@ -2,7 +2,8 @@
 import React, { useState } from "react";
 
 const treesPerLot = 100;
-const baseCostPerTree = 15;
+const baseCostPerTree = 10;
+const baseReturnPerTreePerYear = 4;
 
 type TreeType = "SL795" | "Catuai" | "Typica" | "Liberica";
 
@@ -33,19 +34,19 @@ const lotInfo: {
         {
           type: "SL795",
           costPerLot: baseCostPerTree * 1.1 * treesPerLot,
-          annualReturnPerLot: 50,
+          annualReturnPerLot: baseReturnPerTreePerYear * 1.1 * treesPerLot,
           cultivationPeriod: 3,
         },
         {
           type: "Typica",
           costPerLot: baseCostPerTree * 1.3 * treesPerLot,
-          annualReturnPerLot: 70,
+          annualReturnPerLot: baseReturnPerTreePerYear * 1.3 * treesPerLot,
           cultivationPeriod: 4,
         },
         {
           type: "Catuai",
           costPerLot: baseCostPerTree * 1.1 * treesPerLot,
-          annualReturnPerLot: 50,
+          annualReturnPerLot: baseReturnPerTreePerYear * 1.1 * treesPerLot,
           cultivationPeriod: 3,
         },
       ],
@@ -62,7 +63,7 @@ const lotInfo: {
         {
           type: "Catuai",
           costPerLot: baseCostPerTree * treesPerLot,
-          annualReturnPerLot: 50,
+          annualReturnPerLot: baseReturnPerTreePerYear * treesPerLot,
           cultivationPeriod: 3,
         },
       ],
@@ -79,7 +80,7 @@ const lotInfo: {
         {
           type: "Liberica",
           costPerLot: baseCostPerTree * 0.8 * treesPerLot,
-          annualReturnPerLot: 40,
+          annualReturnPerLot:  baseReturnPerTreePerYear * 0.8 * treesPerLot,
           cultivationPeriod: 3,
         },
       ],
@@ -92,13 +93,14 @@ const lotInfo: {
 export default function CalculatorPage() {
   // States
   const [selectedFarm, setSelectedFarm] = useState<
-   "toraja" | "kintamani" | "sarawak"
+    "toraja" | "kintamani" | "sarawak"
   >("toraja");
   const [maxLots, setMaxLots] = useState(lotInfo[selectedFarm][0].lotsPerOrder);
   const [selectedTreeType, setSelectedTreeType] = useState<TreeType>("Catuai");
 
   // Calculated Vars as States
   const [totalCost, setTotalCost] = useState(0);
+  const [numberOfLotsToPurchase, setNumberOfLotsToPurchase] = useState(0);
   const [totalReturn, setTotalReturn] = useState(0);
   const [cultivationPeriod, setCultivationPeriod] = useState(0);
   const [annualReturn, setAnnualReturn] = useState(0);
@@ -114,9 +116,7 @@ export default function CalculatorPage() {
   const handleTreeTypeChange = (
     event: React.ChangeEvent<HTMLSelectElement>
   ) => {
-    setSelectedTreeType(
-      event.target.value as TreeType
-    );
+    setSelectedTreeType(event.target.value as TreeType);
   };
 
   const calculateReturns = () => {
@@ -131,12 +131,16 @@ export default function CalculatorPage() {
       return;
     }
 
-    console.log("selectedTreeData.costPerLot", selectedTreeData.costPerLot);
-    setTotalCost(selectedTreeData.costPerLot);
-    setTotalReturn(selectedTreeData.annualReturnPerLot);
+
+    console.log("selected tree data", selectedTreeData);
+    console.log("numberOfLotsToPurchase", numberOfLotsToPurchase);
+    console.log("cultivationPeriod", selectedTreeData.cultivationPeriod);
+
+    setTotalCost(selectedTreeData.costPerLot * numberOfLotsToPurchase);
+    setTotalReturn(selectedTreeData.annualReturnPerLot * numberOfLotsToPurchase * (25 - selectedTreeData.cultivationPeriod));
+    setAnnualReturn(selectedTreeData.annualReturnPerLot * numberOfLotsToPurchase);
+    setRoi((selectedTreeData.annualReturnPerLot / selectedTreeData.costPerLot) * 100 );
     setCultivationPeriod(selectedTreeData.cultivationPeriod);
-    setAnnualReturn(selectedTreeData.annualReturnPerLot / selectedTreeData.cultivationPeriod);
-    setRoi((selectedTreeData.annualReturnPerLot / selectedTreeData.cultivationPeriod / selectedTreeData.costPerLot) * 100);
   };
 
   return (
@@ -145,19 +149,18 @@ export default function CalculatorPage() {
         <h1 className="text-4xl font-bold">Calculate Your Returns</h1>
       </div>
 
-      <div className="mt-10 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
-        <div className="sm:col-span-4">
-          <label className="block text-sm font-medium leading-6 text-gray-900">
-            Which farm would you like to purchase lots from:
-          </label>
+      <div className="flex">
+        <div className="mt-10 flex flex-col w-1/2 border-r-solid border-r-2 border-r-grey-500 mr-4">
+          <div className="sm:col-span-4">
+            <label className="block text-sm font-medium leading-6 text-gray-900">
+              Which farm would you like to purchase lots from:
+            </label>
 
-          <div className="mt-2">
             <select
-              className="ml-2 p-2 border rounded"
+              className="p-2 border rounded"
               value={selectedFarm}
               onChange={handleFarmChange}
             >
-            
               <option value="toraja">
                 Toraja, Sulawesi, Indonesia [1800m arabica]
               </option>
@@ -169,63 +172,114 @@ export default function CalculatorPage() {
               </option>
             </select>
           </div>
-          <p className="mt-3 text-sm leading-6 text-gray-600">
-            You can purchase up to {maxLots} lots at one time from this Farm
-          </p>
-        </div>
 
-        <div className="col-span-full">
-          <label
-            htmlFor="about"
-            className="block text-sm font-medium leading-6 text-gray-900"
-          >
-            Which tree type would you like to purchase:
-          </label>
-          {selectedFarm && (
-            <select
-              className="ml-2 p-2 border rounded"
-              value={selectedTreeType}
-              onChange={handleTreeTypeChange}
+          <div className="col-span-full mt-6">
+            <label
+              htmlFor="about"
+              className="block text-sm font-medium leading-6 text-gray-900"
             >
-              {lotInfo[selectedFarm][0].trees.map((tree) => (
-                <option key={tree.type} value={tree.type}>
-                  {tree.type}
-                </option>
-              ))}
-            </select>
-          )}
+              Which tree type would you like to purchase:
+            </label>
+            {selectedFarm && (
+              <select
+                className="p-2 border rounded"
+                value={selectedTreeType}
+                onChange={handleTreeTypeChange}
+              >
+                {lotInfo[selectedFarm][0].trees.map((tree) => (
+                  <option key={tree.type} value={tree.type}>
+                    {tree.type}
+                  </option>
+                ))}
+              </select>
+            )}
+          </div>
+
+          <div className="col-span-full mt-6">
+            <label
+              htmlFor="about"
+              className="block text-sm font-medium leading-6 text-gray-900"
+            >
+              How Many Lots would you like to purchase
+            </label>
+            {selectedFarm && (
+              <input 
+              type="number"
+              className="p-2 border rounded"
+              max={maxLots}
+              value={numberOfLotsToPurchase}
+              onChange={(e) => {
+                const value = Number(e.target.value);
+                if (value <= maxLots) {
+                  setNumberOfLotsToPurchase(value);
+                } else {
+                  setNumberOfLotsToPurchase(maxLots); // Optionally, set to maxLots if value exceeds max
+                }
+              }}
+            />
+            )}
+            <p className="mt-3 text-sm leading-6 text-gray-600">
+              You can purchase up to {maxLots} lots at one time from this Farm
+            </p>
+          </div>
+
+          <div className="mt-6 flex items-right justify-right ">
+            <button
+              onClick={calculateReturns}
+              className=" rounded-md bg-green-900 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-green-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+            >
+              Calculate
+            </button>
+          </div>
         </div>
 
-        <div className="mt-6 flex items-center gap-x-6">
-          <button
-            onClick={calculateReturns}
-            className="rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
-          >
-            Calculate
-          </button>
+        <div className="mt-10 flex flex-col w-1/2 overflow-hidden">
+          <table className="table-auto w-full mt-12">
+            <thead>
+              <tr>
+                <th className="px-4 py-2 text-left">Total Cost</th>
+                <th className="px-4 py-2 text-left">Total Return</th>
+                <th className="px-4 py-2 text-left">Cultivation Period</th>
+                <th className="px-4 py-2 text-left">Annual Return</th>
+                <th className="px-4 py-2 text-left">ROI</th>
+              </tr>
+            </thead>
+            <tbody>
+                <tr>
+                <td className="px-4 py-2 text-left">
+                  ${totalCost.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
+                </td>
+                <td className="px-4 py-2 text-left">
+                  ${(totalReturn)
+                  .toFixed(0)
+                  .replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
+                </td>
+                <td className="px-4 py-2 text-left">
+                  {cultivationPeriod.toFixed(0)} years
+                </td>
+                <td className="px-4 py-2 text-left">
+                  ${annualReturn
+                  .toFixed(0)
+                  .replace(/\B(?=(\d{3})+(?!\d))/g, ",")}{" "}
+                  (after year 3)
+                </td>
+                <td className="px-4 py-2 text-left">
+                  {roi.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}% (over
+                  25 years)
+                </td>
+                </tr>
+            </tbody>
+          </table>
+
+          <div className="mt-6 flex items-right justify-right ">
+            <button
+              className=" rounded-md bg-green-900 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-green-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+            >
+              Place Order
+            </button>
+          </div>
         </div>
       </div>
-
-      <table className="table-auto w-full mt-12">
-        <thead>
-          <tr>
-            <th className="px-4 py-2">Total Cost</th>
-            <th className="px-4 py-2">Total Return</th>
-            <th className="px-4 py-2">Cultivation Period</th>
-            <th className="px-4 py-2">Annual Return</th>
-            <th className="px-4 py-2">ROI</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td className="px-4 py-2">{totalCost}</td>
-            <td className="px-4 py-2">{totalReturn}</td>
-            <td className="px-4 py-2">{cultivationPeriod}</td>
-            <td className="px-4 py-2">{annualReturn}</td>
-            <td className="px-4 py-2">{roi}</td>
-          </tr>
-        </tbody>
-      </table>
     </div>
   );
 }
