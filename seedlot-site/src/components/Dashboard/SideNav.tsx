@@ -1,6 +1,7 @@
 "use client";
 import React from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 
 type Role = "client" | "manager" | "admin";
@@ -54,7 +55,7 @@ const menuItems: { [key in Role]: MenuItem[] } = {
       icon: "icon here"
     },
     {
-      name: "Managers",
+      name: "Farm Managers",
       href: "/dashboard/managers",
       icon: "icon here"
     },
@@ -74,7 +75,13 @@ const SideNav = () => {
   return (
     <div className="bg-gray-900 text-gray-300 w-64 h-screen p-5">
       <Link href={"/"}>
-        <h1 className="text-gray-300"> {"<"} Seed Lot</h1>
+      <Image
+          src="/images/seedlot_logo_white.png"
+          alt="Seedlot"
+          width={200}
+          height={80}
+          className="mb-8"
+        />
       </Link>
       <ul className="list-none p-0">
         {items.map((item) => (
