@@ -1,11 +1,24 @@
 "use client";
 import Link from "next/link";
-import Image from "next/image";
-import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
+import { useEffect } from "react";
+import { WalletAuth } from "@/components/WalletAuth/WalletAuth";
+import { signInWithCustomToken } from "firebase/auth";
+import { auth } from '../config/firebaseConfig';
 import { useWallet } from "@solana/wallet-adapter-react";
+import Image from "next/image";
+
 
 export default function Home() {
-  const { connected } = useWallet();
+  const { publicKey, connected } = useWallet();
+  
+  useEffect(() => {
+    if (publicKey && connected) {
+      signInWithCustomToken(auth, publicKey.toString())
+      console.log("connected user", auth.currentUser);
+    }
+  }, [connected]);
+
+
   return (
     <div className="flex min-h-screen">
       <div className="flex flex-col items-center justify-center w-1/2 bg-gray-100">
@@ -16,7 +29,7 @@ export default function Home() {
           height={80}
           className="mb-8"
         />
-        {connected && (
+        {auth.currentUser && (
           <Link href="/dashboard">
             <span className="relative inline-flex transition-opacity duration-300 ease-in">
               <button
@@ -37,7 +50,8 @@ export default function Home() {
         <h2 className="text-2xl font-semibold mb-4">
           Connect Your Wallet to get started
         </h2>
-        <WalletMultiButton className="mb-8" />
+
+        <WalletAuth />
 
         <div className="items-bottom">
           <h5 className="text-md font-semibold mb-4">Solana Contracts</h5>
