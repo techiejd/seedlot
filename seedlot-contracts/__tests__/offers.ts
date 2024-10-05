@@ -21,7 +21,7 @@ describe("Offers", () => {
       name: `Offer Mint`,
       symbol: `OFFER`,
       uri: `https://example.com/offer/`,
-      locationVariety: [`location`, `variety`],
+      locationVarietyPrice: [`location`, `variety`, `price`],
     };
     const accounts = {
       admin: admin.publicKey,
@@ -49,6 +49,7 @@ describe("Offers", () => {
     expect(metadata.additionalMetadata).toEqual([
       ["location", `location`],
       ["variety", `variety`],
+      ["price", `price`],
     ]);
     const offers = await program.account.offers.fetch(offersAccount.publicKey);
     console.log(offers);
@@ -69,7 +70,7 @@ describe("Offers", () => {
           name: `Offer Mint ${i}`,
           symbol: `OFFER${i}`,
           uri: `https://example.com/offer/${i}`,
-          locationVariety: [`location${i}`, `variety${i}`],
+          locationVarietyPrice: [`location${i}`, `variety${i}`, `price${i}`],
         };
         const accounts = {
           admin: admin.publicKey,
@@ -129,6 +130,7 @@ describe("Offers", () => {
           locationVariety: [
             `location${TOTAL_OFFERS}`,
             `variety${TOTAL_OFFERS}`,
+            `price${TOTAL_OFFERS}`,
           ],
         })
         .accounts(accounts)

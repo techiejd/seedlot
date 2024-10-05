@@ -12,7 +12,7 @@ pub use contract::*;
 pub use errors::*;
 pub use offers::*;
 use utils::{init_mint, InitMint, InitMintBumps, MintMetadata};
-declare_id!("C4o4QSNLw5mpdwyJGr5JXuC2ZnukLNbLF6S5zLtGeucK");
+declare_id!("AKN2JvdTDrpLXCBrGBirWXRmNiRq33kP3obE6gMFQJUZ");
 
 #[program]
 pub mod seedlot_contracts {
@@ -22,7 +22,6 @@ pub mod seedlot_contracts {
     pub fn initialize<'info>(
         ctx: Context<'_, '_, '_, 'info, Initialize<'info>>,
         min_trees_per_lot: u64,
-        lot_price: u64,
         certification_mint_metadata: MintMetadata,
     ) -> Result<()> {
         init_mint(
@@ -48,7 +47,6 @@ pub mod seedlot_contracts {
         contract.admin = ctx.accounts.admin.key();
         contract.offers_account = ctx.accounts.offers_account.key();
         contract.min_trees_per_lot = min_trees_per_lot;
-        contract.lot_price = lot_price;
         contract.certification_mint = ctx.accounts.certification_mint.key();
         Ok(())
     }

@@ -46,10 +46,10 @@ export const CERTIFICATION_MINT_METADATA: MintMetadata = {
   name: "Seedlot Manager Certification",
   symbol: "SEEDLOT-MCERT",
   uri: "https://app.seedlot.io/certification",
-  locationVariety: null,
+  locationVarietyPrice: null,
 };
 export const MIN_TREES_PER_LOT = new anchor.BN(10);
-export const LOT_PRICE = new anchor.BN(200);
+export const PRICE_PER_TREE = new anchor.BN(200);
 
 export const initializeOffers = async (admin: web3.Keypair) => {
   const offersAccount = web3.Keypair.generate();
@@ -95,7 +95,7 @@ export const initialize = async () => {
     certificationMint: certificationMint.publicKey,
   };
   const txHash = await program.methods
-    .initialize(MIN_TREES_PER_LOT, LOT_PRICE, CERTIFICATION_MINT_METADATA)
+    .initialize(MIN_TREES_PER_LOT, CERTIFICATION_MINT_METADATA)
     .accounts(accounts)
     .signers([admin, certificationMint])
     .rpc();

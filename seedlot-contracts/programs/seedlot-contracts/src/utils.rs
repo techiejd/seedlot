@@ -57,12 +57,16 @@ pub fn init_mint<'info>(
             symbol: mint_metadata.symbol.to_string(),
             uri: mint_metadata.uri.to_string(),
             additional_metadata: mint_metadata
-                .location_variety
+                .location_variety_price
                 .clone()
-                .map(|location_variety| {
+                .map(|location_variety_price| {
                     vec![
-                        ("location".to_string(), location_variety[0].to_string()),
-                        ("variety".to_string(), location_variety[1].to_string()),
+                        (
+                            "location".to_string(),
+                            location_variety_price[0].to_string(),
+                        ),
+                        ("variety".to_string(), location_variety_price[1].to_string()),
+                        ("price".to_string(), location_variety_price[2].to_string()),
                     ]
                 })
                 .unwrap_or_else(Vec::new),
@@ -143,8 +147,8 @@ pub fn init_mint<'info>(
         mint_metadata.uri.to_string(),
     )?;
 
-    if let Some(ref location_variety) = mint_metadata.location_variety {
-        for (i, val) in location_variety.iter().enumerate() {
+    if let Some(ref location_variety_price) = mint_metadata.location_variety_price {
+        for (i, val) in location_variety_price.iter().enumerate() {
             token_metadata_update_field(
                 CpiContext::new_with_signer(
                     ctx.accounts.token_program.to_account_info(),
@@ -155,7 +159,7 @@ pub fn init_mint<'info>(
                     },
                     signer_seeds,
                 ),
-                Field::Key((["location", "variety"][i]).to_string()),
+                Field::Key((["location", "variety", "price"][i]).to_string()),
                 val.to_string(),
             )?;
         }
@@ -217,5 +221,5 @@ pub struct MintMetadata {
     pub name: String,
     pub symbol: String,
     pub uri: String,
-    pub location_variety: Option<[String; 2]>,
+    pub location_variety_price: Option<[String; 3]>,
 }

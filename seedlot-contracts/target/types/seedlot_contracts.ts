@@ -5,7 +5,7 @@
  * IDL can be found at `target/idl/seedlot_contracts.json`.
  */
 export type SeedlotContracts = {
-  "address": "C4o4QSNLw5mpdwyJGr5JXuC2ZnukLNbLF6S5zLtGeucK",
+  "address": "AKN2JvdTDrpLXCBrGBirWXRmNiRq33kP3obE6gMFQJUZ",
   "metadata": {
     "name": "seedlotContracts",
     "version": "0.1.0",
@@ -476,10 +476,6 @@ export type SeedlotContracts = {
           "type": "u64"
         },
         {
-          "name": "lotPrice",
-          "type": "u64"
-        },
-        {
           "name": "certificationMintMetadata",
           "type": {
             "defined": {
@@ -588,10 +584,6 @@ export type SeedlotContracts = {
             "type": "u64"
           },
           {
-            "name": "lotPrice",
-            "type": "u64"
-          },
-          {
             "name": "certificationMint",
             "type": "pubkey"
           },
@@ -620,12 +612,12 @@ export type SeedlotContracts = {
             "type": "string"
           },
           {
-            "name": "locationVariety",
+            "name": "locationVarietyPrice",
             "type": {
               "option": {
                 "array": [
                   "string",
-                  2
+                  3
                 ]
               }
             }
