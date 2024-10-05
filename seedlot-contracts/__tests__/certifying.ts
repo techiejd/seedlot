@@ -1,30 +1,12 @@
-import * as anchor from "@coral-xyz/anchor";
-import { Program, web3 } from "@coral-xyz/anchor";
-import { SeedlotContracts } from "../target/types/seedlot_contracts";
+import { web3 } from "@coral-xyz/anchor";
 import {
-  getMint,
-  getExtensionTypes,
-  ExtensionType,
   TOKEN_2022_PROGRAM_ID,
-  getMintLen,
-  createInitializeMintInstruction,
   getAssociatedTokenAddress,
   ASSOCIATED_TOKEN_PROGRAM_ID,
   getAccount,
   createTransferInstruction,
   createBurnInstruction,
-  createInitializeDefaultAccountStateInstruction,
-  AccountState,
-  TYPE_SIZE,
-  LENGTH_SIZE,
-  createInitializeMetadataPointerInstruction,
 } from "@solana/spl-token";
-import {
-  createInitializeInstruction,
-  createUpdateFieldInstruction,
-  pack,
-  TokenMetadata,
-} from "@solana/spl-token-metadata";
 import {
   CertificationTier,
   initialize,

@@ -15,6 +15,8 @@ import {
   LOT_PRICE,
   confirmTx,
   CERTIFICATION_MINT_METADATA,
+  initializeOffers,
+  TOTAL_OFFERS,
 } from "../client/utils";
 
 describe("initializing", () => {
@@ -22,6 +24,7 @@ describe("initializing", () => {
   let contractPK: web3.PublicKey;
   let contract: Contract;
   let certificationMint: web3.Keypair;
+  let offersAccount: web3.Keypair;
   beforeAll(async () => {
     admin = web3.Keypair.generate();
     await airdrop(admin.publicKey);
@@ -34,25 +37,15 @@ describe("initializing", () => {
         program.programId
       );
       certificationMint = web3.Keypair.generate();
+      offersAccount = await initializeOffers(admin);
       const accounts = {
         admin: admin.publicKey,
         contract: contractPK,
+        offersAccount: offersAccount.publicKey,
         systemProgram: web3.SystemProgram.programId,
         tokenProgram: TOKEN_2022_PROGRAM_ID,
         certificationMint: certificationMint.publicKey,
       };
-      const tx = await program.methods
-        .initialize(MIN_TREES_PER_LOT, LOT_PRICE, CERTIFICATION_MINT_METADATA)
-        .accounts(accounts)
-        .signers([admin, certificationMint])
-        .preInstructions([
-          anchor.web3.ComputeBudgetProgram.setComputeUnitLimit({
-            units: 800_000,
-          }),
-        ])
-        .transaction();
-
-      console.log({ tx });
 
       const txHash = await program.methods
         .initialize(MIN_TREES_PER_LOT, LOT_PRICE, CERTIFICATION_MINT_METADATA)
@@ -63,21 +56,7 @@ describe("initializing", () => {
             units: 800_000,
           }),
         ])
-        .rpc()
-        .catch(async (e) => {
-          if (e instanceof anchor.web3.SendTransactionError) {
-            console.log(
-              JSON.stringify(
-                await e.getLogs(program.provider.connection),
-                null,
-                2
-              )
-            );
-            console.log(e.logs.slice(-50));
-          }
-          throw e;
-        })
-        .then((txHash) => txHash);
+        .rpc();
 
       await confirmTx(txHash);
       contract = await program.account.contract.fetch(contractPK);
@@ -127,6 +106,18 @@ describe("initializing", () => {
         expect(metadata.uri).toEqual(CERTIFICATION_MINT_METADATA.uri);
         expect(metadata.additionalMetadata).toEqual([]);
       });
+    });
+    it("Sets the offers account", async () => {
+      expect(contract.offersAccount).toEqual(offersAccount.publicKey);
+      const offers = await program.account.offers.fetch(
+        offersAccount.publicKey
+      );
+      expect(offers.owner).toEqual(contractPK);
+      expect(offers.tail.eqn(0)).toBe(true);
+      expect(offers.offers).toHaveLength(TOTAL_OFFERS);
+      expect(
+        offers.offers.every((o) => o.mint.equals(web3.SystemProgram.programId))
+      ).toBe(true);
     });
     test.todo(
       "Sets the percentage that the managers will receive in taking on an order"

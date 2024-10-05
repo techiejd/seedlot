@@ -38,6 +38,10 @@ export const program = anchor.workspace
 export const confirmTx = (txHash: string) => _confirmTx(txHash, program);
 export const airdrop = (addy: web3.PublicKey) => _airdrop(addy, program);
 
+export const TOTAL_OFFERS = Number(
+  program.idl.constants.find((c) => c.name === "totalOffers")?.value
+);
+
 export const CERTIFICATION_MINT_METADATA: MintMetadata = {
   name: "Seedlot Manager Certification",
   symbol: "SEEDLOT-MCERT",
@@ -46,6 +50,29 @@ export const CERTIFICATION_MINT_METADATA: MintMetadata = {
 };
 export const MIN_TREES_PER_LOT = new anchor.BN(10);
 export const LOT_PRICE = new anchor.BN(200);
+
+export const initializeOffers = async (admin: web3.Keypair) => {
+  const offersAccount = web3.Keypair.generate();
+  const offersAccountSize = program.account.offers.size;
+  const lamportsForRentExemption =
+    await program.provider.connection.getMinimumBalanceForRentExemption(
+      offersAccountSize
+    );
+  const createAccountInstruction = web3.SystemProgram.createAccount({
+    fromPubkey: admin.publicKey,
+    newAccountPubkey: offersAccount.publicKey,
+    lamports: lamportsForRentExemption,
+    space: offersAccountSize,
+    programId: program.programId,
+  });
+  const transaction = new web3.Transaction().add(createAccountInstruction);
+  await web3.sendAndConfirmTransaction(
+    program.provider.connection,
+    transaction,
+    [admin, offersAccount]
+  );
+  return offersAccount;
+};
 
 export const initialize = async () => {
   const admin = web3.Keypair.generate();
@@ -57,9 +84,12 @@ export const initialize = async () => {
     program.programId
   );
 
+  const offersAccount = await initializeOffers(admin);
+
   const accounts = {
     admin: admin.publicKey,
     contract: contractPK,
+    offersAccount: offersAccount.publicKey,
     systemProgram: web3.SystemProgram.programId,
     tokenProgram: TOKEN_2022_PROGRAM_ID,
     certificationMint: certificationMint.publicKey,
@@ -74,7 +104,8 @@ export const initialize = async () => {
   return {
     txConfirmation,
     contractPK,
-    certificationMint: certificationMint,
+    certificationMint,
     admin,
+    offersAccount,
   };
 };

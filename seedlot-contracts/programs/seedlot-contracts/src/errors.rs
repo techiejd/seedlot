@@ -7,4 +7,5 @@ pub enum SeedlotContractsError {
     CannotCertifyAboveTierFour,
     NoCertificationTierZero,
     ManagerAlreadyDecertified,
+    OffersFull,
 }

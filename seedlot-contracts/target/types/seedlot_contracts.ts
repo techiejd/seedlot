@@ -5,7 +5,7 @@
  * IDL can be found at `target/idl/seedlot_contracts.json`.
  */
 export type SeedlotContracts = {
-  "address": "AWMhFouhxyeqXrHCKXtJ6vNszopzBJ4RH7BA6rXUwCiV",
+  "address": "C4o4QSNLw5mpdwyJGr5JXuC2ZnukLNbLF6S5zLtGeucK",
   "metadata": {
     "name": "seedlotContracts",
     "version": "0.1.0",
@@ -13,6 +13,81 @@ export type SeedlotContracts = {
     "description": "Created with Anchor"
   },
   "instructions": [
+    {
+      "name": "addOffer",
+      "discriminator": [
+        139,
+        28,
+        26,
+        53,
+        223,
+        138,
+        219,
+        252
+      ],
+      "accounts": [
+        {
+          "name": "admin",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "contract",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  116,
+                  114,
+                  97,
+                  99,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "admin"
+              }
+            ]
+          }
+        },
+        {
+          "name": "offersAccount",
+          "writable": true
+        },
+        {
+          "name": "orderMint",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "systemProgram",
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "tokenProgram",
+          "address": "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"
+        },
+        {
+          "name": "rent",
+          "address": "SysvarRent111111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "offerMintMetadata",
+          "type": {
+            "defined": {
+              "name": "mintMetadata"
+            }
+          }
+        }
+      ]
+    },
     {
       "name": "certify",
       "discriminator": [
@@ -374,6 +449,10 @@ export type SeedlotContracts = {
           "signer": true
         },
         {
+          "name": "offersAccount",
+          "writable": true
+        },
+        {
           "name": "admin",
           "writable": true,
           "signer": true
@@ -424,6 +503,19 @@ export type SeedlotContracts = {
         183,
         26
       ]
+    },
+    {
+      "name": "offers",
+      "discriminator": [
+        160,
+        63,
+        162,
+        20,
+        115,
+        192,
+        237,
+        89
+      ]
     }
   ],
   "errors": [
@@ -446,6 +538,10 @@ export type SeedlotContracts = {
     {
       "code": 6004,
       "name": "managerAlreadyDecertified"
+    },
+    {
+      "code": 6005,
+      "name": "offersFull"
     }
   ],
   "types": [
@@ -498,6 +594,10 @@ export type SeedlotContracts = {
           {
             "name": "certificationMint",
             "type": "pubkey"
+          },
+          {
+            "name": "offersAccount",
+            "type": "pubkey"
           }
         ]
       }
@@ -532,6 +632,62 @@ export type SeedlotContracts = {
           }
         ]
       }
+    },
+    {
+      "name": "offer",
+      "serialization": "bytemuck",
+      "repr": {
+        "kind": "c"
+      },
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "mint",
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "offers",
+      "serialization": "bytemuck",
+      "repr": {
+        "kind": "c"
+      },
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "owner",
+            "type": "pubkey"
+          },
+          {
+            "name": "tail",
+            "type": "u64"
+          },
+          {
+            "name": "offers",
+            "type": {
+              "array": [
+                {
+                  "defined": {
+                    "name": "offer"
+                  }
+                },
+                300
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "constants": [
+    {
+      "name": "totalOffers",
+      "type": "u64",
+      "value": "300"
     }
   ]
 };

@@ -9,7 +9,8 @@ impl Contract {
         + PUBLIC_KEY_LENGTH // admin
         + U64_LENGTH // min_trees_per_lot
         + U64_LENGTH // lot_price
-        + PUBLIC_KEY_LENGTH; // certification_mint
+        + PUBLIC_KEY_LENGTH // certification_mint
+        + PUBLIC_KEY_LENGTH; // offers_account
 }
 
 #[account]
@@ -18,4 +19,5 @@ pub struct Contract {
     pub min_trees_per_lot: u64,
     pub lot_price: u64,
     pub certification_mint: Pubkey,
+    pub offers_account: Pubkey,
 }
