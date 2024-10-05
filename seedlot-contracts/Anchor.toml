@@ -5,7 +5,7 @@ seeds = false
 skip-lint = false
 
 [programs.localnet]
-seedlot_contracts = "HHERmxZrLv5kri1VSc4zEbgwJnS8iJWximBSpNN9wH6M"
+seedlot_contracts = "AWMhFouhxyeqXrHCKXtJ6vNszopzBJ4RH7BA6rXUwCiV"
 
 [registry]
 url = "https://api.apr.dev"
@@ -15,4 +15,4 @@ cluster = "Localnet"
 wallet = "/Users/juandominguez/.config/solana/id.json"
 
 [scripts]
-test = "yarn run jest --preset ts-jest"
+test = "yarn run jest --preset ts-jest --detectOpenHandles"

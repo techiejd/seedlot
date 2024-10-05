@@ -5,7 +5,7 @@
  * IDL can be found at `target/idl/seedlot_contracts.json`.
  */
 export type SeedlotContracts = {
-  "address": "HHERmxZrLv5kri1VSc4zEbgwJnS8iJWximBSpNN9wH6M",
+  "address": "AWMhFouhxyeqXrHCKXtJ6vNszopzBJ4RH7BA6rXUwCiV",
   "metadata": {
     "name": "seedlotContracts",
     "version": "0.1.0",
@@ -369,15 +369,13 @@ export type SeedlotContracts = {
           }
         },
         {
-          "name": "mint"
-        },
-        {
-          "name": "admin",
+          "name": "certificationMint",
           "writable": true,
           "signer": true
         },
         {
-          "name": "mintAsSigner",
+          "name": "admin",
+          "writable": true,
           "signer": true
         },
         {
@@ -387,6 +385,10 @@ export type SeedlotContracts = {
         {
           "name": "tokenProgram",
           "address": "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"
+        },
+        {
+          "name": "rent",
+          "address": "SysvarRent111111111111111111111111111111111"
         }
       ],
       "args": [
@@ -397,6 +399,14 @@ export type SeedlotContracts = {
         {
           "name": "lotPrice",
           "type": "u64"
+        },
+        {
+          "name": "certificationMintMetadata",
+          "type": {
+            "defined": {
+              "name": "mintMetadata"
+            }
+          }
         }
       ]
     }
@@ -488,6 +498,37 @@ export type SeedlotContracts = {
           {
             "name": "certificationMint",
             "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "mintMetadata",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "symbol",
+            "type": "string"
+          },
+          {
+            "name": "uri",
+            "type": "string"
+          },
+          {
+            "name": "locationVariety",
+            "type": {
+              "option": {
+                "array": [
+                  "string",
+                  2
+                ]
+              }
+            }
           }
         ]
       }
