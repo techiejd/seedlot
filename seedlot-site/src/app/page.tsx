@@ -7,6 +7,16 @@ import { auth } from '../config/firebaseConfig';
 import { useWallet } from "@solana/wallet-adapter-react";
 import Image from "next/image";
 
+import dynamic from "next/dynamic";
+const WalletMultiButton = dynamic(
+  () =>
+    import("@solana/wallet-adapter-react-ui").then(
+      (mod) => mod.WalletMultiButton
+    ),
+  {
+    loading: () => <p>loading...</p>,
+  }
+);
 
 export default function Home() {
   const { publicKey, connected } = useWallet();
