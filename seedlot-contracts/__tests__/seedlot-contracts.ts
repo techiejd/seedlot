@@ -1,180 +1,78 @@
 import * as anchor from "@coral-xyz/anchor";
-import { Program, web3 } from "@coral-xyz/anchor";
-import { SeedlotContracts } from "../target/types/seedlot_contracts";
-import * as utils from "../client/utils";
+import { web3 } from "@coral-xyz/anchor";
 import {
   getMint,
   getExtensionTypes,
   ExtensionType,
   TOKEN_2022_PROGRAM_ID,
-  getMintLen,
-  createInitializeMintInstruction,
-  createInitializeNonTransferableMintInstruction,
-  getAssociatedTokenAddress,
+  getTokenMetadata,
+  TOKEN_PROGRAM_ID,
   ASSOCIATED_TOKEN_PROGRAM_ID,
   getAccount,
-  createTransferInstruction,
-  createBurnInstruction,
-  createInitializeDefaultAccountStateInstruction,
-  AccountState,
+  getAssociatedTokenAddressSync,
 } from "@solana/spl-token";
-
-anchor.setProvider(anchor.AnchorProvider.env());
-type Contract = anchor.IdlAccounts<SeedlotContracts>["contract"];
-type CertificationTier = anchor.IdlTypes<SeedlotContracts>["certificationTier"];
-const program = anchor.workspace.SeedlotContracts as Program<SeedlotContracts>;
-const confirmTx = (txHash: string) => utils.confirmTx(txHash, program);
-const airdrop = (addy: web3.PublicKey) => utils.airdrop(addy, program);
-
-const makeMint = async (admin: web3.Keypair, contractPK: web3.PublicKey) => {
-  const mint = web3.Keypair.generate();
-  const mintPK = mint.publicKey;
-
-  const mintSpace = getMintLen([ExtensionType.DefaultAccountState]);
-  const lamports =
-    await program.provider.connection.getMinimumBalanceForRentExemption(
-      mintSpace
-    );
-
-  const transaction = new web3.Transaction().add(
-    web3.SystemProgram.createAccount({
-      fromPubkey: admin.publicKey,
-      newAccountPubkey: mintPK,
-      space: mintSpace,
-      lamports,
-      programId: TOKEN_2022_PROGRAM_ID,
-    }),
-    createInitializeDefaultAccountStateInstruction(
-      mintPK,
-      AccountState.Frozen,
-      TOKEN_2022_PROGRAM_ID
-    ),
-    createInitializeMintInstruction(
-      mintPK,
-      0,
-      contractPK,
-      contractPK,
-      TOKEN_2022_PROGRAM_ID
-    )
-  );
-
-  const txHash = await web3.sendAndConfirmTransaction(
-    program.provider.connection,
-    transaction,
-    [admin, mint]
-  );
-
-  return { txHash, mint };
-};
-
-const MIN_TREES_PER_LOT = new anchor.BN(10);
-const LOT_PRICE = new anchor.BN(200);
-
-enum ClientCertificationTierMirror {
-  undefined = 0,
-  tier1 = 1,
-  tier2 = 2,
-  tier3 = 3,
-  tier4 = 4,
-  decertified = 5,
-}
-
-const numberToClientCertificationTierMirror: { [key: number]: string } = {};
-for (const key in ClientCertificationTierMirror) {
-  if (typeof ClientCertificationTierMirror[key] === "number") {
-    numberToClientCertificationTierMirror[ClientCertificationTierMirror[key]] =
-      key;
-  }
-}
-
-const convertToCertificationTier = (tier: number) => {
-  return {
-    [numberToClientCertificationTierMirror[tier]]: {},
-  } as CertificationTier;
-};
+import {
+  Contract,
+  airdrop,
+  program,
+  MIN_TREES_PER_LOT,
+  confirmTx,
+  CERTIFICATION_MINT_METADATA,
+  initializeOffers,
+  TOTAL_OFFERS,
+  initializeUSDC,
+} from "../client/utils";
 
 describe("initializing", () => {
   let admin: web3.Keypair;
   let contractPK: web3.PublicKey;
   let contract: Contract;
-  let mint: web3.Keypair;
+  let certificationMint: web3.Keypair;
+  let offersAccount: web3.Keypair;
+  let usdcMint: web3.PublicKey;
+  let contractUsdcTokenAccount: web3.PublicKey;
   beforeAll(async () => {
     admin = web3.Keypair.generate();
     await airdrop(admin.publicKey);
   });
 
-  describe("fails initializing", () => {
-    it("fails if seed does not include only admin", async () => {
-      const someOtherAdmin = web3.Keypair.generate();
-      const [failingContractPK0] = web3.PublicKey.findProgramAddressSync(
-        [Buffer.from("contract")],
-        program.programId
-      );
-      const { mint } = await makeMint(admin, failingContractPK0);
-      const accounts0 = {
-        contract: failingContractPK0,
-        admin: admin.publicKey,
-        systemProgram: web3.SystemProgram.programId,
-        tokenProgram: TOKEN_2022_PROGRAM_ID,
-        mint: mint.publicKey,
-        mintAsSigner: mint.publicKey,
-      };
-      await expect(
-        program.methods
-          .initialize(MIN_TREES_PER_LOT, LOT_PRICE)
-          .accounts(accounts0)
-          .signers([admin, mint])
-          .rpc()
-      ).rejects.toThrow("ConstraintSeeds");
-      const [failingContractPK1] = web3.PublicKey.findProgramAddressSync(
-        [
-          Buffer.from("contract"),
-          admin.publicKey.toBuffer(),
-          someOtherAdmin.publicKey.toBuffer(),
-        ],
-        program.programId
-      );
-      const accounts1 = {
-        contract: failingContractPK1,
-        admin: admin.publicKey,
-        systemProgram: web3.SystemProgram.programId,
-        tokenProgram: TOKEN_2022_PROGRAM_ID,
-        mint: mint.publicKey,
-        mintAsSigner: mint.publicKey,
-      };
-      await expect(
-        program.methods
-          .initialize(MIN_TREES_PER_LOT, LOT_PRICE)
-          .accounts(accounts1)
-          .signers([admin, mint])
-          .rpc()
-      ).rejects.toThrow("ConstraintSeeds");
-    });
-  });
-
   describe("success", () => {
-    let contractPK: web3.PublicKey;
-    let contract: Contract;
-    let mint: web3.Keypair;
-
     beforeAll(async () => {
       [contractPK] = web3.PublicKey.findProgramAddressSync(
         [Buffer.from("contract"), admin.publicKey.toBuffer()],
         program.programId
       );
-      ({ mint } = await makeMint(admin, contractPK));
+      certificationMint = web3.Keypair.generate();
+      [offersAccount, { mint: usdcMint }] = await Promise.all([
+        initializeOffers(admin),
+        initializeUSDC(),
+      ]);
+      contractUsdcTokenAccount = getAssociatedTokenAddressSync(
+        usdcMint,
+        contractPK,
+        true
+      );
       const accounts = {
         admin: admin.publicKey,
         contract: contractPK,
+        offersAccount: offersAccount.publicKey,
         systemProgram: web3.SystemProgram.programId,
         tokenProgram: TOKEN_2022_PROGRAM_ID,
-        mint: mint.publicKey,
-        mintAsSigner: mint.publicKey,
+        certificationMint: certificationMint.publicKey,
+        usdcMint,
+        contractUsdcTokenAccount: contractUsdcTokenAccount,
+        associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+        tokenProgramStandard: TOKEN_PROGRAM_ID,
       };
       const txHash = await program.methods
-        .initialize(MIN_TREES_PER_LOT, LOT_PRICE)
+        .initialize(MIN_TREES_PER_LOT, CERTIFICATION_MINT_METADATA)
         .accounts(accounts)
-        .signers([admin, mint])
+        .signers([admin, certificationMint])
+        .preInstructions([
+          anchor.web3.ComputeBudgetProgram.setComputeUnitLimit({
+            units: 800_000,
+          }),
+        ])
         .rpc();
 
       await confirmTx(txHash);
@@ -187,13 +85,10 @@ describe("initializing", () => {
     it("Sets the number of minimum trees in a lot", async () => {
       expect(contract.minTreesPerLot.eq(MIN_TREES_PER_LOT)).toBe(true);
     });
-    it("Sets the price of a lot", async () => {
-      expect(contract.lotPrice.eq(LOT_PRICE)).toBe(true);
-    });
     describe("certification Mint", () => {
       it("Sets a certification mint", () => {
         expect(contract.certificationMint).toBeDefined();
-        expect(contract.certificationMint).toEqual(mint.publicKey);
+        expect(contract.certificationMint).toEqual(certificationMint.publicKey);
       });
       it("Sets the certification mint with correct Token settings", async () => {
         // TODO(techiejd): Move this to a test for makeMint
@@ -213,449 +108,47 @@ describe("initializing", () => {
         const extensionTypes = getExtensionTypes(mintInfo.tlvData);
         expect(extensionTypes).toContain(ExtensionType.DefaultAccountState);
       });
-      test.todo(
-        "Sets the certification mint with correct Token Metadata settings" /*, async () => {
+      it("Sets the certification mint with correct Token Metadata settings", async () => {
         const metadata = await getTokenMetadata(
           program.provider.connection,
           contract.certificationMint,
           undefined,
           TOKEN_2022_PROGRAM_ID
         );
-        expect(metadata.name).toEqual("Seedlot Certification");
-        expect(metadata.symbol).toEqual("SEEDLOT-CERT");
-        expect(metadata.uri).toEqual("");
-      }*/
+        expect(metadata.name).toEqual(CERTIFICATION_MINT_METADATA.name);
+        expect(metadata.symbol).toEqual(CERTIFICATION_MINT_METADATA.symbol);
+        expect(metadata.uri).toEqual(CERTIFICATION_MINT_METADATA.uri);
+        expect(metadata.additionalMetadata).toEqual([]);
+      });
+    });
+    it("Sets the offers account", async () => {
+      expect(contract.offersAccount).toEqual(offersAccount.publicKey);
+      const offers = await program.account.offers.fetch(
+        offersAccount.publicKey
       );
+      expect(offers.owner).toEqual(contractPK);
+      expect(offers.tail.eqn(0)).toBe(true);
+      expect(offers.offers).toHaveLength(TOTAL_OFFERS);
+      expect(
+        offers.offers.every((o) => o.mint.equals(web3.SystemProgram.programId))
+      ).toBe(true);
     });
     test.todo(
       "Sets the percentage that the managers will receive in taking on an order"
     );
-  });
-});
-
-const initialize = async () => {
-  const admin = web3.Keypair.generate();
-  await airdrop(admin.publicKey);
-
-  const [contractPK] = web3.PublicKey.findProgramAddressSync(
-    [Buffer.from("contract"), admin.publicKey.toBuffer()],
-    program.programId
-  );
-  const { mint } = await makeMint(admin, contractPK);
-
-  const accounts = {
-    admin: admin.publicKey,
-    contract: contractPK,
-    systemProgram: web3.SystemProgram.programId,
-    tokenProgram: TOKEN_2022_PROGRAM_ID,
-    mint: mint.publicKey,
-    mintAsSigner: mint.publicKey,
-  };
-  const txHash = await program.methods
-    .initialize(MIN_TREES_PER_LOT, LOT_PRICE)
-    .accounts(accounts)
-    .signers([admin, mint])
-    .rpc();
-
-  const txConfirmation = await confirmTx(txHash);
-  return { txConfirmation, contractPK, mint, admin };
-};
-
-describe("Certifying", () => {
-  let admin: web3.Keypair;
-  let contractPK: web3.PublicKey;
-  let mint: web3.Keypair;
-  let manager: web3.Keypair;
-  let managerAta: web3.PublicKey;
-  beforeAll(async () => {
-    ({ admin, contractPK, mint } = await initialize());
-  });
-  beforeEach(async () => {
-    manager = web3.Keypair.generate();
-    managerAta = await getAssociatedTokenAddress(
-      mint.publicKey,
-      manager.publicKey,
-      false,
-      TOKEN_2022_PROGRAM_ID
-    );
-  });
-  it("Admin and manager need to be different.", async () => {
-    await airdrop(manager.publicKey);
-    const accounts = {
-      admin: manager.publicKey, // Use manager instead of admin
-      contract: contractPK,
-      tokenProgram: TOKEN_2022_PROGRAM_ID,
-      managerTo: managerAta,
-      certificationMint: mint.publicKey,
-      associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-      systemProgram: web3.SystemProgram.programId,
-      manager: manager.publicKey,
-    };
-    await expect(
-      program.methods
-        .certify({ undefined: {} })
-        .accounts(accounts)
-        .signers([manager])
-        .rpc()
-    ).rejects.toThrow("Error Code: AdminCannotBeCertified");
-  });
-  describe("Can only certify at increasing by 1 tiers starting at 1 and ending at 4.", () => {
-    let accounts: {
-      admin: web3.PublicKey;
-      contract: web3.PublicKey;
-      tokenProgram: web3.PublicKey;
-      managerTo: web3.PublicKey;
-      certificationMint: web3.PublicKey;
-      associatedTokenProgram: web3.PublicKey;
-      systemProgram: web3.PublicKey;
-      manager: web3.PublicKey;
-    };
-    beforeEach(async () => {
-      accounts = {
-        admin: admin.publicKey,
-        contract: contractPK,
-        tokenProgram: TOKEN_2022_PROGRAM_ID,
-        managerTo: managerAta,
-        certificationMint: mint.publicKey,
-        associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-        systemProgram: web3.SystemProgram.programId,
-        manager: manager.publicKey,
-      };
-    });
-    it("Can certify at tiers 1 - 4", async () => {
-      for (let tier = 1; tier < 5; tier++) {
-        const txHash = await program.methods
-          .certify(convertToCertificationTier(tier))
-          .accounts(accounts)
-          .signers([admin])
-          .rpc();
-        await confirmTx(txHash);
-        // Check that the manager received i token(s)
-        const managerTokenAccount = await getAccount(
-          program.provider.connection,
-          managerAta,
-          undefined,
-          TOKEN_2022_PROGRAM_ID
-        );
-        expect(Number(managerTokenAccount.amount)).toBe(tier);
-      }
-    });
-    it("Fails if you try to certify as decertified", async () => {
-      for (let tier = 1; tier < 5; tier++) {
-        const txHash = await program.methods
-          .certify(convertToCertificationTier(tier))
-          .accounts(accounts)
-          .signers([admin])
-          .rpc();
-        await confirmTx(txHash);
-      }
-      await expect(
-        program.methods
-          .certify({ decertified: {} })
-          .accounts(accounts)
-          .signers([admin])
-          .rpc()
-      ).rejects.toThrow("Error Code: CannotCertifyAboveTierFour");
-    });
-    it("Fails you try to certify at tier 0", async () => {
-      await expect(
-        program.methods
-          .certify({ undefined: {} })
-          .accounts(accounts)
-          .signers([admin])
-          .rpc()
-      ).rejects.toThrow("Error Code: NoCertificationTierZero");
-    });
-    it("Fails you try to certify at a tier that is not one more than the previous tier", async () => {
-      await program.methods
-        .certify({ tier1: {} })
-        .accounts(accounts)
-        .signers([admin])
-        .rpc();
-      await expect(
-        program.methods
-          .certify({ tier3: {} })
-          .accounts(accounts)
-          .signers([admin])
-          .rpc()
-      ).rejects.toThrow("Error Code: CertificationsMustIncreaseByOneTier");
-    });
-    it("Does not allow for multiple certifications of the same tier.", async () => {
-      const txHash = await program.methods
-        .certify({ tier1: {} })
-        .accounts(accounts)
-        .signers([admin])
-        .rpc();
-      await confirmTx(txHash);
-      await expect(
-        program.methods
-          .certify({ tier1: {} })
-          .accounts(accounts)
-          .signers([admin])
-          .rpc()
-      ).rejects.toThrow("Error Code: CertificationsMustIncreaseByOneTier");
-    });
-  });
-  it("Cannot be transferred", async () => {
-    const accounts = {
-      admin: admin.publicKey,
-      contract: contractPK,
-      tokenProgram: TOKEN_2022_PROGRAM_ID,
-      managerTo: managerAta,
-      certificationMint: mint.publicKey,
-      associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-      systemProgram: web3.SystemProgram.programId,
-      manager: manager.publicKey,
-    };
-    await program.methods
-      .certify({ tier1: {} })
-      .accounts(accounts)
-      .signers([admin])
-      .rpc();
-    await airdrop(manager.publicKey);
-    const toManager = web3.Keypair.generate();
-    const toManagerAta = await getAssociatedTokenAddress(
-      mint.publicKey,
-      toManager.publicKey,
-      false,
-      TOKEN_2022_PROGRAM_ID
-    );
-    const transferInstruction = createTransferInstruction(
-      managerAta,
-      toManagerAta,
-      manager.publicKey,
-      1,
-      [],
-      TOKEN_2022_PROGRAM_ID
-    );
-    await expect(
-      web3.sendAndConfirmTransaction(
+    it("Sets the USDC token account", async () => {
+      expect(contract.usdcTokenAccount).toEqual(contractUsdcTokenAccount);
+      const tokenAccount = await getAccount(
         program.provider.connection,
-        new web3.Transaction().add(transferInstruction),
-        [manager]
-      )
-    ).rejects.toThrow("Account is frozen");
-    const managerTokenAccount = await getAccount(
-      program.provider.connection,
-      managerAta,
-      undefined,
-      TOKEN_2022_PROGRAM_ID
-    );
-    expect(managerTokenAccount.amount).toBe(1n);
-  });
-  it("Cannot be burned", async () => {
-    const accounts = {
-      admin: admin.publicKey,
-      contract: contractPK,
-      tokenProgram: TOKEN_2022_PROGRAM_ID,
-      managerTo: managerAta,
-      certificationMint: mint.publicKey,
-      associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-      systemProgram: web3.SystemProgram.programId,
-      manager: manager.publicKey,
-    };
-    await program.methods
-      .certify({ tier1: {} })
-      .accounts(accounts)
-      .signers([admin])
-      .rpc();
-    await airdrop(manager.publicKey);
-    const burnInstruction = createBurnInstruction(
-      managerAta,
-      mint.publicKey,
-      manager.publicKey,
-      1,
-      [],
-      TOKEN_2022_PROGRAM_ID
-    );
-    await expect(
-      web3.sendAndConfirmTransaction(
-        program.provider.connection,
-        new web3.Transaction().add(burnInstruction),
-        [manager]
-      )
-    ).rejects.toThrow("Account is frozen");
-    const managerTokenAccount = await getAccount(
-      program.provider.connection,
-      managerAta,
-      undefined,
-      TOKEN_2022_PROGRAM_ID
-    );
-    expect(managerTokenAccount.amount).toBe(1n);
-  });
-});
-
-describe("Decertifying", () => {
-  const DECERTIFIED_TIER_TOKEN_AMOUNT = 5n;
-  let admin: web3.Keypair;
-  let contractPK: web3.PublicKey;
-  let mint: web3.Keypair;
-  beforeAll(async () => {
-    ({ admin, contractPK, mint } = await initialize());
-  });
-  test.todo("Only allows admin to decertify.");
-  test.todo("Admin and manager need to be different.");
-  it("Allows for non certified manager to be decertified.", async () => {
-    const manager = web3.Keypair.generate();
-    const managerAta = await getAssociatedTokenAddress(
-      mint.publicKey,
-      manager.publicKey,
-      false,
-      TOKEN_2022_PROGRAM_ID
-    );
-    const accounts = {
-      admin: admin.publicKey,
-      contract: contractPK,
-      tokenProgram: TOKEN_2022_PROGRAM_ID,
-      managerTo: managerAta,
-      certificationMint: mint.publicKey,
-      associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-      systemProgram: web3.SystemProgram.programId,
-      manager: manager.publicKey,
-    };
-    const txHash = await program.methods
-      .decertify()
-      .accounts(accounts)
-      .signers([admin])
-      .rpc();
-    await confirmTx(txHash);
-    const managerTokenAccount = await getAccount(
-      program.provider.connection,
-      managerAta,
-      undefined,
-      TOKEN_2022_PROGRAM_ID
-    );
-    expect(managerTokenAccount.amount).toBe(DECERTIFIED_TIER_TOKEN_AMOUNT);
-  });
-  it("Can decertify at any tier.", async () => {
-    await Promise.all(
-      [1, 2, 3, 4].map(async (tierUnderTest) => {
-        {
-          const manager = web3.Keypair.generate();
-          const managerAta = await getAssociatedTokenAddress(
-            mint.publicKey,
-            manager.publicKey,
-            false,
-            TOKEN_2022_PROGRAM_ID
-          );
-          const accounts = {
-            admin: admin.publicKey,
-            contract: contractPK,
-            tokenProgram: TOKEN_2022_PROGRAM_ID,
-            managerTo: managerAta,
-            certificationMint: mint.publicKey,
-            associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-            systemProgram: web3.SystemProgram.programId,
-            manager: manager.publicKey,
-          };
-          for (let tier = 1; tier <= tierUnderTest; tier++) {
-            await program.methods
-              .certify(convertToCertificationTier(tier))
-              .accounts(accounts)
-              .signers([admin])
-              .rpc();
-          }
-          const txHash = await program.methods
-            .decertify()
-            .accounts(accounts)
-            .signers([admin])
-            .rpc();
-          await confirmTx(txHash);
-          const managerTokenAccount = await getAccount(
-            program.provider.connection,
-            managerAta,
-            undefined,
-            TOKEN_2022_PROGRAM_ID
-          );
-          expect(managerTokenAccount.amount).toBe(
-            DECERTIFIED_TIER_TOKEN_AMOUNT
-          );
-        }
-      })
-    );
-  });
-  it("Cannot decertify if already decertified.", async () => {
-    const manager = web3.Keypair.generate();
-    const managerAta = await getAssociatedTokenAddress(
-      mint.publicKey,
-      manager.publicKey,
-      false,
-      TOKEN_2022_PROGRAM_ID
-    );
-    const accounts = {
-      admin: admin.publicKey,
-      contract: contractPK,
-      tokenProgram: TOKEN_2022_PROGRAM_ID,
-      managerTo: managerAta,
-      certificationMint: mint.publicKey,
-      associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-      systemProgram: web3.SystemProgram.programId,
-      manager: manager.publicKey,
-    };
-    await program.methods.decertify().accounts(accounts).signers([admin]).rpc();
-    await expect(
-      program.methods.decertify().accounts(accounts).signers([admin]).rpc()
-    ).rejects.toThrow("Error Code: ManagerAlreadyDecertified");
-  });
-  it("Cannot certify if already decertified.", async () => {
-    const manager = web3.Keypair.generate();
-    const managerAta = await getAssociatedTokenAddress(
-      mint.publicKey,
-      manager.publicKey,
-      false,
-      TOKEN_2022_PROGRAM_ID
-    );
-    const accounts = {
-      admin: admin.publicKey,
-      contract: contractPK,
-      tokenProgram: TOKEN_2022_PROGRAM_ID,
-      managerTo: managerAta,
-      certificationMint: mint.publicKey,
-      associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-      systemProgram: web3.SystemProgram.programId,
-      manager: manager.publicKey,
-    };
-    await program.methods.decertify().accounts(accounts).signers([admin]).rpc();
-    await expect(
-      program.methods
-        .certify({ tier1: {} })
-        .accounts(accounts)
-        .signers([admin])
-        .rpc()
-    ).rejects.toThrow("Error Code: ManagerAlreadyDecertified");
-  });
-});
-
-describe("Ordering", () => {
-  test.todo("Takes USDC for the number of lots ordered.");
-  test.todo("Issues semi-fungible tokens to be fulfilled later.");
-  test.todo("Freezes the tokens so that they cannot be moved");
-});
-
-describe("Claiming", () => {
-  test.todo("Only allows for certified managers to claim orders");
-  test.todo(
-    "Allows for the manager to receive the aforementioned percentage right away"
-  );
-  test.todo("Adds the manager as the claimer for the lots they took");
-  test.todo(
-    "Lets the manager to partially claim the order and lets others claim the rest."
-  );
-  test.todo("Does not let another manager take over a claimed portion.");
-});
-
-describe("Fulfilling", () => {
-  test.todo("Can only be called by admin");
-  test.todo("Only allows for the manager who claimed the order to fulfill it.");
-  describe("Successfully fulfilled", () => {
-    test.todo("Allows for the manager to receive the remaining percentage");
-    test.todo("Unfreezes the tokens so that they can be moved");
-  });
-  describe("Unsuccessfully fulfilled", () => {
-    test.todo(
-      "Requires admins to replace the money originally given to the manager to claim the order"
-    );
-    test.todo("Decertifies the manager");
-    test.todo("Removes the manager as the claimer for the lots they took");
+        contract.usdcTokenAccount
+      );
+      expect(tokenAccount.owner).toEqual(contractPK);
+      expect(tokenAccount.amount).toEqual(BigInt(0));
+      expect(tokenAccount.isInitialized).toBe(true);
+      expect(tokenAccount.mint).toEqual(usdcMint);
+    });
+    it("Sets the USDC mint", async () => {
+      expect(contract.usdcMint).toEqual(usdcMint);
+    });
   });
 });

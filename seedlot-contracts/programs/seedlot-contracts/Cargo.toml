@@ -26,3 +26,5 @@ spl-token = { version = "4.0.0", features = [ "no-entrypoint" ] }
 spl-token-metadata-interface = { version = "0.3.5"}
 spl-type-length-value = "0.4.6"
 spl-associated-token-account = "=3.0.4"
+bytemuck = { version = "1.18.0", features = ["derive", "min_const_generics"]}
+mpl-token-metadata = "4.1.2"

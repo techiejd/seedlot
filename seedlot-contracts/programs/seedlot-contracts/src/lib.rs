@@ -1,127 +1,85 @@
-use core::fmt;
-
 use anchor_lang::prelude::*;
 use anchor_spl::associated_token::AssociatedToken;
+use anchor_spl::token::Token;
 use anchor_spl::token_2022::Token2022;
 use anchor_spl::token_interface::{Mint, TokenAccount};
-use solana_program::program_option::COption;
 
-declare_id!("HHERmxZrLv5kri1VSc4zEbgwJnS8iJWximBSpNN9wH6M");
+mod certify;
+mod contract;
+mod errors;
+mod offers;
+mod orders;
+mod utils;
+
+pub use certify::*;
+pub use contract::*;
+pub use errors::*;
+pub use offers::*;
+pub use orders::*;
+use utils::{init_mint, InitMint, InitMintBumps, MintMetadata};
+declare_id!("6jAUUvKWWrbqVqjJNjmSU2a5EgW5Kg9caR8myyneszCF");
 
 #[program]
 pub mod seedlot_contracts {
+
     use super::*;
 
-    pub fn initialize(
-        ctx: Context<Initialize>,
+    pub fn initialize<'info>(
+        ctx: Context<'_, '_, '_, 'info, Initialize<'info>>,
         min_trees_per_lot: u64,
-        lot_price: u64,
+        certification_mint_metadata: MintMetadata,
     ) -> Result<()> {
+        init_mint(
+            Context::new(
+                ctx.program_id,
+                &mut InitMint {
+                    admin: ctx.accounts.admin.clone(),
+                    contract: ctx.accounts.contract.clone(),
+                    mint: ctx.accounts.certification_mint.clone(),
+                    rent: ctx.accounts.rent.clone(),
+                    token_program: ctx.accounts.token_program.to_account_info(),
+                    system_program: ctx.accounts.system_program.to_account_info(),
+                },
+                &[],
+                InitMintBumps {
+                    contract: ctx.bumps.contract,
+                },
+            ),
+            &certification_mint_metadata,
+        )?;
+        ctx.accounts.offers_account.load_init()?.owner = ctx.accounts.contract.key();
         let contract = &mut ctx.accounts.contract;
         contract.admin = ctx.accounts.admin.key();
+        contract.offers_account = ctx.accounts.offers_account.key();
         contract.min_trees_per_lot = min_trees_per_lot;
-        contract.lot_price = lot_price;
-        contract.certification_mint = ctx.accounts.mint.key();
-
+        contract.certification_mint = ctx.accounts.certification_mint.key();
+        contract.usdc_token_account = ctx.accounts.contract_usdc_token_account.key();
+        contract.usdc_mint = ctx.accounts.usdc_mint.key();
         Ok(())
     }
 
     pub fn certify(ctx: Context<Certify>, new_tier: CertificationTier) -> Result<()> {
-        require_neq!(
-            new_tier,
-            CertificationTier::Undefined,
-            SeedlotContractsError::NoCertificationTierZero
-        );
-        require_neq!(
-            new_tier,
-            CertificationTier::Decertified,
-            SeedlotContractsError::CannotCertifyAboveTierFour
-        );
-        let new_tier_number = new_tier as u64;
-        let current_certification = ctx.accounts.manager_to.amount;
-        require_neq!(
-            current_certification,
-            CertificationTier::Decertified as u64,
-            SeedlotContractsError::ManagerAlreadyDecertified
-        );
-        require_eq!(
-            current_certification + 1,
-            new_tier_number,
-            SeedlotContractsError::CertificationsMustIncreaseByOneTier
-        );
-
-        // Mint one token to the manager's token account to show they are certified or increase their tier
-        utils::mint_certification_tokens(&ctx, 1)?;
-
-        Ok(())
+        certify::instructions::certify(ctx, new_tier)
     }
 
     pub fn decertify(ctx: Context<Certify>) -> Result<()> {
-        let decertified_tier_as_u64 = CertificationTier::Decertified as u64;
-        require_neq!(
-            ctx.accounts.manager_to.amount,
-            decertified_tier_as_u64,
-            SeedlotContractsError::ManagerAlreadyDecertified
-        );
-        let current_number_of_certification_tokens = ctx.accounts.manager_to.amount;
-        let number_of_tokens_needed_to_decertify =
-            decertified_tier_as_u64 - current_number_of_certification_tokens;
-
-        utils::mint_certification_tokens(&ctx, number_of_tokens_needed_to_decertify)?;
-        Ok(())
+        certify::instructions::decertify(ctx)
     }
 
-    mod utils {
-        use super::*;
-
-        pub fn mint_certification_tokens(ctx: &Context<Certify>, amount: u64) -> Result<()> {
-            // Thaw the account before minting
-            anchor_spl::token_2022::thaw_account(CpiContext::new_with_signer(
-                ctx.accounts.token_program.to_account_info(),
-                anchor_spl::token_2022::ThawAccount {
-                    account: ctx.accounts.manager_to.to_account_info(),
-                    mint: ctx.accounts.certification_mint.to_account_info(),
-                    authority: ctx.accounts.contract.to_account_info(),
-                },
-                &[&[
-                    b"contract",
-                    ctx.accounts.admin.key().as_ref(),
-                    &[ctx.bumps.contract],
-                ]],
-            ))?;
-            anchor_spl::token_2022::mint_to(
-                CpiContext::new_with_signer(
-                    ctx.accounts.token_program.to_account_info(),
-                    anchor_spl::token_2022::MintTo {
-                        mint: ctx.accounts.certification_mint.to_account_info(),
-                        to: ctx.accounts.manager_to.to_account_info(),
-                        authority: ctx.accounts.contract.to_account_info(),
-                    },
-                    &[&[
-                        b"contract",
-                        ctx.accounts.admin.key().as_ref(),
-                        &[ctx.bumps.contract],
-                    ]],
-                ),
-                amount,
-            )?;
-            // Freeze the account after minting
-            anchor_spl::token_2022::freeze_account(CpiContext::new_with_signer(
-                ctx.accounts.token_program.to_account_info(),
-                anchor_spl::token_2022::FreezeAccount {
-                    account: ctx.accounts.manager_to.to_account_info(),
-                    mint: ctx.accounts.certification_mint.to_account_info(),
-                    authority: ctx.accounts.contract.to_account_info(),
-                },
-                &[&[
-                    b"contract",
-                    ctx.accounts.admin.key().as_ref(),
-                    &[ctx.bumps.contract],
-                ]],
-            ))?;
-            Ok(())
-        }
+    pub fn add_offer(ctx: Context<AddOffer>, offer_mint_metadata: MintMetadata) -> Result<()> {
+        offers::instructions::add_offer(ctx, &offer_mint_metadata)
     }
+
+    pub fn place_order(
+        ctx: Context<PlaceOrder>,
+        offer_index: u64,
+        order_quantity: u64,
+    ) -> Result<()> {
+        orders::instructions::place_order(ctx, offer_index, order_quantity)
+    }
+
+    #[constant]
+    pub const TOTAL_OFFERS: u64 = Offers::TOTAL_OFFERS;
 }
 
 #[derive(Accounts)]
@@ -129,86 +87,29 @@ pub struct Initialize<'info> {
     #[account(
         init,
         payer = admin,
-        space = 8 + 32 + 8 + 8 + 32, // 8 bytes for discriminator + 32 bytes for pubkey + 8 bytes for u64 + 8 bytes for u64 + 32 bytes for pubkey
+        space = Contract::LEN,
         seeds = [b"contract", admin.key().as_ref()],
         bump
     )]
     pub contract: Account<'info, Contract>,
-    #[account(
-        mint::decimals = 0,
-        mint::authority = contract,
-        mint::freeze_authority = contract,
-        constraint = mint.supply == 0,
-    )]
-    pub mint: InterfaceAccount<'info, Mint>,
+    #[account(mut)]
+    pub certification_mint: Signer<'info>,
+    #[account(zero)]
+    pub offers_account: AccountLoader<'info, Offers>,
     #[account(mut)]
     pub admin: Signer<'info>,
-    pub mint_as_signer: Signer<'info>,
     pub system_program: Program<'info, System>,
     pub token_program: Program<'info, Token2022>,
-}
-
-#[account]
-pub struct Contract {
-    pub admin: Pubkey,
-    pub min_trees_per_lot: u64,
-    pub lot_price: u64,
-    pub certification_mint: Pubkey,
-}
-
-// Add this enum definition
-#[derive(AnchorSerialize, AnchorDeserialize, Clone, PartialEq, Eq, Debug)]
-#[repr(u8)]
-pub enum CertificationTier {
-    Undefined = 0,
-    Tier1 = 1,       // Can get up to 10 lots
-    Tier2 = 2,       // Can get up to 1,000 lots
-    Tier3 = 3,       // Can get up to 10,000 lots
-    Tier4 = 4,       // No limit
-    Decertified = 5, // Can no longer be used for certification
-}
-
-impl fmt::Display for CertificationTier {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{:?}", self)
-    }
-}
-
-#[derive(Accounts)]
-pub struct Certify<'info> {
-    #[account(mut)]
-    pub admin: Signer<'info>,
+    pub rent: Sysvar<'info, Rent>,
+    pub usdc_mint: InterfaceAccount<'info, Mint>,
     #[account(
-        constraint = admin.key() != manager.key() @ SeedlotContractsError::AdminCannotBeCertified
-    )]
-    pub manager: SystemAccount<'info>,
-    #[account(
-        seeds = [b"contract", admin.key().as_ref()],
-        bump
-    )]
-    pub contract: Account<'info, Contract>,
-    #[account(
-        mut,
-        constraint = certification_mint.mint_authority == COption::Some(contract.key())
-    )]
-    pub certification_mint: InterfaceAccount<'info, Mint>,
-    #[account(
-        init_if_needed,
+        init,
         payer = admin,
-        associated_token::mint = certification_mint,
-        associated_token::authority = manager,
+        associated_token::mint = usdc_mint,
+        associated_token::authority = contract,
+        associated_token::token_program = token_program_standard
     )]
-    pub manager_to: InterfaceAccount<'info, TokenAccount>,
+    pub contract_usdc_token_account: InterfaceAccount<'info, TokenAccount>,
     pub associated_token_program: Program<'info, AssociatedToken>,
-    pub token_program: Program<'info, Token2022>,
-    pub system_program: Program<'info, System>,
-}
-
-#[error_code]
-pub enum SeedlotContractsError {
-    AdminCannotBeCertified,
-    CertificationsMustIncreaseByOneTier,
-    CannotCertifyAboveTierFour,
-    NoCertificationTierZero,
-    ManagerAlreadyDecertified,
+    pub token_program_standard: Program<'info, Token>,
 }
