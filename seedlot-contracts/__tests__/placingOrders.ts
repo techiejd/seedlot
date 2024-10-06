@@ -2,6 +2,7 @@ import * as anchor from "@coral-xyz/anchor";
 import {
   airdrop,
   initialize,
+  MIN_TREES_PER_LOT,
   MintMetadata,
   PRICE_PER_TREE,
   program,
@@ -41,14 +42,14 @@ describe("Offers", () => {
       TOKEN_PROGRAM_ID,
       ASSOCIATED_TOKEN_PROGRAM_ID
     );
-    const _100Dollars = 100 * 100 * 10 ** 6;
+    const _1000Dollars = 1000 * 100 * 10 ** 6;
     await mintTo(
       program.provider.connection,
       user,
       usdc.mint,
       userAta.address,
       usdc.authority,
-      1000000000
+      _1000Dollars
     );
     orderMint = anchor.web3.Keypair.generate();
     const orderMintMetadata: MintMetadata = {
@@ -133,7 +134,12 @@ describe("Offers", () => {
     );
     expect(userUsdcAccountAfter.amount).toBe(
       userUsdcAccountBefore.amount -
-        BigInt(numOrders * Number(PRICE_PER_TREE) * 10 ** 4)
+        BigInt(
+          numOrders *
+            MIN_TREES_PER_LOT.toNumber() *
+            Number(PRICE_PER_TREE) *
+            10 ** 4
+        )
     );
   });
 });
