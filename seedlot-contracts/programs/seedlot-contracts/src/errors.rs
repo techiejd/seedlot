@@ -8,4 +8,8 @@ pub enum SeedlotContractsError {
     NoCertificationTierZero,
     ManagerAlreadyDecertified,
     OffersFull,
+    InvalidOfferIndex,
+    OrderMintNotFound,
+    AdditionalMetadataIllFormed,
+    InvalidPrice,
 }

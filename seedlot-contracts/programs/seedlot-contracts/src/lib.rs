@@ -8,14 +8,16 @@ mod certify;
 mod contract;
 mod errors;
 mod offers;
+mod orders;
 mod utils;
 
 pub use certify::*;
 pub use contract::*;
 pub use errors::*;
 pub use offers::*;
+pub use orders::*;
 use utils::{init_mint, InitMint, InitMintBumps, MintMetadata};
-declare_id!("GeiGqJWSp41oxi1eaQyTiRSdHTJy6r15uMy1Mq2k9q3f");
+declare_id!("6jAUUvKWWrbqVqjJNjmSU2a5EgW5Kg9caR8myyneszCF");
 
 #[program]
 pub mod seedlot_contracts {
@@ -51,7 +53,7 @@ pub mod seedlot_contracts {
         contract.offers_account = ctx.accounts.offers_account.key();
         contract.min_trees_per_lot = min_trees_per_lot;
         contract.certification_mint = ctx.accounts.certification_mint.key();
-        contract.usdc_token_account = ctx.accounts.usdc_token_account.key();
+        contract.usdc_token_account = ctx.accounts.contract_usdc_token_account.key();
         contract.usdc_mint = ctx.accounts.usdc_mint.key();
         Ok(())
     }
@@ -66,6 +68,14 @@ pub mod seedlot_contracts {
 
     pub fn add_offer(ctx: Context<AddOffer>, offer_mint_metadata: MintMetadata) -> Result<()> {
         offers::instructions::add_offer(ctx, &offer_mint_metadata)
+    }
+
+    pub fn place_order(
+        ctx: Context<PlaceOrder>,
+        offer_index: u64,
+        order_quantity: u64,
+    ) -> Result<()> {
+        orders::instructions::place_order(ctx, offer_index, order_quantity)
     }
 
     #[constant]
@@ -99,7 +109,7 @@ pub struct Initialize<'info> {
         associated_token::authority = contract,
         associated_token::token_program = token_program_standard
     )]
-    pub usdc_token_account: InterfaceAccount<'info, TokenAccount>,
+    pub contract_usdc_token_account: InterfaceAccount<'info, TokenAccount>,
     pub associated_token_program: Program<'info, AssociatedToken>,
     pub token_program_standard: Program<'info, Token>,
 }

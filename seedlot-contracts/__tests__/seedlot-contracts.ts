@@ -16,7 +16,6 @@ import {
   airdrop,
   program,
   MIN_TREES_PER_LOT,
-  PRICE_PER_TREE,
   confirmTx,
   CERTIFICATION_MINT_METADATA,
   initializeOffers,
@@ -31,7 +30,7 @@ describe("initializing", () => {
   let certificationMint: web3.Keypair;
   let offersAccount: web3.Keypair;
   let usdcMint: web3.PublicKey;
-  let usdcTokenAccount: web3.PublicKey;
+  let contractUsdcTokenAccount: web3.PublicKey;
   beforeAll(async () => {
     admin = web3.Keypair.generate();
     await airdrop(admin.publicKey);
@@ -48,7 +47,7 @@ describe("initializing", () => {
         initializeOffers(admin),
         initializeUSDC(),
       ]);
-      usdcTokenAccount = getAssociatedTokenAddressSync(
+      contractUsdcTokenAccount = getAssociatedTokenAddressSync(
         usdcMint,
         contractPK,
         true
@@ -61,7 +60,7 @@ describe("initializing", () => {
         tokenProgram: TOKEN_2022_PROGRAM_ID,
         certificationMint: certificationMint.publicKey,
         usdcMint,
-        usdcTokenAccount: usdcTokenAccount,
+        contractUsdcTokenAccount: contractUsdcTokenAccount,
         associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
         tokenProgramStandard: TOKEN_PROGRAM_ID,
       };
@@ -138,7 +137,7 @@ describe("initializing", () => {
       "Sets the percentage that the managers will receive in taking on an order"
     );
     it("Sets the USDC token account", async () => {
-      expect(contract.usdcTokenAccount).toEqual(usdcTokenAccount);
+      expect(contract.usdcTokenAccount).toEqual(contractUsdcTokenAccount);
       const tokenAccount = await getAccount(
         program.provider.connection,
         contract.usdcTokenAccount

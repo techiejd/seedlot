@@ -1,12 +1,14 @@
 use anchor_lang::prelude::*;
 use anchor_lang::system_program::create_account;
-use anchor_spl::token_2022::{initialize_mint, InitializeMint as InitializeMintCpi};
+use anchor_spl::associated_token::AssociatedToken;
+use anchor_spl::token_2022::{initialize_mint, InitializeMint as InitializeMintCpi, Token2022};
 use anchor_spl::token_interface::spl_pod::optional_keys::OptionalNonZeroPubkey;
 use anchor_spl::token_interface::{
     default_account_state_initialize, metadata_pointer_initialize, token_metadata_initialize,
-    token_metadata_update_field, DefaultAccountStateInitialize, MetadataPointerInitialize,
-    TokenMetadataInitialize, TokenMetadataUpdateField,
+    token_metadata_update_field, DefaultAccountStateInitialize, MetadataPointerInitialize, Mint,
+    TokenAccount, TokenMetadataInitialize, TokenMetadataUpdateField,
 };
+use solana_program::program_option::COption;
 use spl_token_metadata_interface::state::{Field, TokenMetadata};
 
 use anchor_lang::system_program::CreateAccount;
@@ -168,18 +170,18 @@ pub fn init_mint<'info>(
     Ok(())
 }
 
-pub fn mint_certification_tokens(ctx: &Context<Certify>, amount: u64) -> Result<()> {
+pub fn mint_frozen_tokens_to(ctx: Context<MintFrozenTokensTo>, amount: u64) -> Result<()> {
     // Thaw the account before minting
     anchor_spl::token_2022::thaw_account(CpiContext::new_with_signer(
         ctx.accounts.token_program.to_account_info(),
         anchor_spl::token_2022::ThawAccount {
-            account: ctx.accounts.manager_to.to_account_info(),
-            mint: ctx.accounts.certification_mint.to_account_info(),
+            account: ctx.accounts.to.to_account_info(),
+            mint: ctx.accounts.mint.to_account_info(),
             authority: ctx.accounts.contract.to_account_info(),
         },
         &[&[
             b"contract",
-            ctx.accounts.admin.key().as_ref(),
+            ctx.accounts.contract.admin.as_ref(),
             &[ctx.bumps.contract],
         ]],
     ))?;
@@ -187,13 +189,13 @@ pub fn mint_certification_tokens(ctx: &Context<Certify>, amount: u64) -> Result<
         CpiContext::new_with_signer(
             ctx.accounts.token_program.to_account_info(),
             anchor_spl::token_2022::MintTo {
-                mint: ctx.accounts.certification_mint.to_account_info(),
-                to: ctx.accounts.manager_to.to_account_info(),
+                mint: ctx.accounts.mint.to_account_info(),
+                to: ctx.accounts.to.to_account_info(),
                 authority: ctx.accounts.contract.to_account_info(),
             },
             &[&[
                 b"contract",
-                ctx.accounts.admin.key().as_ref(),
+                ctx.accounts.contract.admin.as_ref(),
                 &[ctx.bumps.contract],
             ]],
         ),
@@ -203,13 +205,13 @@ pub fn mint_certification_tokens(ctx: &Context<Certify>, amount: u64) -> Result<
     anchor_spl::token_2022::freeze_account(CpiContext::new_with_signer(
         ctx.accounts.token_program.to_account_info(),
         anchor_spl::token_2022::FreezeAccount {
-            account: ctx.accounts.manager_to.to_account_info(),
-            mint: ctx.accounts.certification_mint.to_account_info(),
+            account: ctx.accounts.to.to_account_info(),
+            mint: ctx.accounts.mint.to_account_info(),
             authority: ctx.accounts.contract.to_account_info(),
         },
         &[&[
             b"contract",
-            ctx.accounts.admin.key().as_ref(),
+            ctx.accounts.contract.admin.as_ref(),
             &[ctx.bumps.contract],
         ]],
     ))?;
@@ -222,4 +224,28 @@ pub struct MintMetadata {
     pub symbol: String,
     pub uri: String,
     pub location_variety_price: Option<[String; 3]>,
+}
+
+#[derive(Accounts)]
+pub struct MintFrozenTokensTo<'info> {
+    /// CHECK: Only used for getting the associated token address.
+    pub authority: AccountInfo<'info>,
+    #[account(
+        seeds = [b"contract", contract.admin.as_ref()],
+        bump
+    )]
+    pub contract: Account<'info, Contract>,
+    #[account(
+        mut,
+        constraint = mint.mint_authority == COption::Some(contract.key())
+    )]
+    pub mint: InterfaceAccount<'info, Mint>,
+    #[account(
+        mut,
+        associated_token::mint = mint,
+        associated_token::authority = authority
+    )]
+    pub to: InterfaceAccount<'info, TokenAccount>,
+    pub associated_token_program: Program<'info, AssociatedToken>,
+    pub token_program: Program<'info, Token2022>,
 }

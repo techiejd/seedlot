@@ -55,7 +55,7 @@ export const CERTIFICATION_MINT_METADATA: MintMetadata = {
   locationVarietyPrice: null,
 };
 export const MIN_TREES_PER_LOT = new anchor.BN(10);
-export const PRICE_PER_TREE = new anchor.BN(200);
+export const PRICE_PER_TREE = "1500";
 
 export const initializeOffers = async (admin: web3.Keypair) => {
   const offersAccount = web3.Keypair.generate();
@@ -111,7 +111,7 @@ export const initialize = async () => {
     initializeUSDC(),
   ]);
 
-  const usdcTokenAccount = getAssociatedTokenAddressSync(
+  const contractUsdcTokenAccount = getAssociatedTokenAddressSync(
     usdc.mint,
     contractPK,
     true
@@ -125,7 +125,7 @@ export const initialize = async () => {
     tokenProgram: TOKEN_2022_PROGRAM_ID,
     certificationMint: certificationMint.publicKey,
     usdcMint: usdc.mint,
-    usdcTokenAccount: usdcTokenAccount,
+    contractUsdcTokenAccount: contractUsdcTokenAccount,
     associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
     tokenProgramStandard: TOKEN_PROGRAM_ID,
   };
@@ -142,7 +142,7 @@ export const initialize = async () => {
     certificationMint,
     admin,
     offersAccount,
-    usdcTokenAccount,
+    contractUsdcTokenAccount,
     usdc,
   };
 };

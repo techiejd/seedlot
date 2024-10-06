@@ -7,7 +7,7 @@ use solana_program::program_option::COption;
 
 use crate::{Contract, SeedlotContractsError};
 pub mod instructions {
-    use crate::utils::mint_certification_tokens;
+    use crate::utils::{mint_frozen_tokens_to, MintFrozenTokensTo, MintFrozenTokensToBumps};
 
     use super::*;
 
@@ -36,7 +36,24 @@ pub mod instructions {
         );
 
         // Mint one token to the manager's token account to show they are certified or increase their tier
-        mint_certification_tokens(&ctx, 1)?;
+        mint_frozen_tokens_to(
+            Context::new(
+                ctx.program_id,
+                &mut MintFrozenTokensTo {
+                    authority: ctx.accounts.manager.to_account_info(),
+                    contract: ctx.accounts.contract.clone(),
+                    mint: ctx.accounts.certification_mint.clone(),
+                    to: ctx.accounts.manager_to.clone(),
+                    associated_token_program: ctx.accounts.associated_token_program.clone(),
+                    token_program: ctx.accounts.token_program.clone(),
+                },
+                &[],
+                MintFrozenTokensToBumps {
+                    contract: ctx.bumps.contract,
+                },
+            ),
+            1,
+        )?;
 
         Ok(())
     }
@@ -52,7 +69,24 @@ pub mod instructions {
         let number_of_tokens_needed_to_decertify =
             decertified_tier_as_u64 - current_number_of_certification_tokens;
 
-        mint_certification_tokens(&ctx, number_of_tokens_needed_to_decertify)?;
+        mint_frozen_tokens_to(
+            Context::new(
+                ctx.program_id,
+                &mut MintFrozenTokensTo {
+                    authority: ctx.accounts.manager.to_account_info(),
+                    contract: ctx.accounts.contract.clone(),
+                    mint: ctx.accounts.certification_mint.clone(),
+                    to: ctx.accounts.manager_to.clone(),
+                    associated_token_program: ctx.accounts.associated_token_program.clone(),
+                    token_program: ctx.accounts.token_program.clone(),
+                },
+                &[],
+                MintFrozenTokensToBumps {
+                    contract: ctx.bumps.contract,
+                },
+            ),
+            number_of_tokens_needed_to_decertify,
+        )?;
         Ok(())
     }
 }

@@ -91,6 +91,6 @@ pub struct Offer {
 #[repr(C)]
 pub struct Offers {
     pub owner: Pubkey,
-    tail: u64,
+    pub tail: u64,
     pub offers: [Offer; 300],
 }

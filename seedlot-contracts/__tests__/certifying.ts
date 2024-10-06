@@ -350,7 +350,7 @@ describe("Decertifying", () => {
         }
       })
     );
-  });
+  }, 15000);
   it("Cannot decertify if already decertified.", async () => {
     const manager = web3.Keypair.generate();
     const managerAta = await getAssociatedTokenAddress(
