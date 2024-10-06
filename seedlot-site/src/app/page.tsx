@@ -2,22 +2,13 @@
 import Link from "next/link";
 import { useEffect } from "react";
 import { WalletAuth } from "./components/WalletAuth/WalletAuth";
-import { useWallet } from "@solana/wallet-adapter-react";
 import { useUserDetails } from "./hooks/useUserDetails";
 import Image from "next/image";
 
 
 export default function Home() {
-  const { publicKey, connected } = useWallet();
   const { userDetails } = useUserDetails();
-  let userSession = false;
-  useEffect(() => {
-    if (publicKey && connected) {
-      console.log("Lets try to get the user from session: ", connected);
-    }
-  }, [connected]);
-
-
+ 
   return (
     <div className="flex min-h-screen">
       <div className="flex flex-col items-center justify-center w-1/2 bg-gray-100">

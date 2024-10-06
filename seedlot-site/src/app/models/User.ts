@@ -57,13 +57,11 @@ export async function createUser(
 
 export async function getAllUsers(query?: string) {
   let users;
-
   try {
     users = await prisma.user.findMany({
       where: query
         ? {
             OR: [
-              { name: { contains: query, mode: "insensitive" } },
               { role: { is: { name: { contains: query, mode: "insensitive" } } } },
             ],
           }

@@ -8,7 +8,7 @@ interface Manager {
   lots: { length: number }[];
 }
 
-export default function ClientsPage() {
+export default function ManagersPage() {
   const [managers, setManagers] = useState<Manager[]>([]);
 
   useEffect(() => {
