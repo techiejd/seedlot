@@ -146,7 +146,7 @@ export default function CalculatorPage() {
   return (
     <div className="space-y-12 px-8">
       <div className="border-b border-gray-900/10 pb-12">
-        <h1 className="text-4xl font-bold">Calculate Your Returns</h1>
+        <h1 className="text-4xl font-bold">Calculate Potential Returns</h1>
       </div>
 
       <div className="flex">

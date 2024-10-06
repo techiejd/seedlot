@@ -1,30 +1,19 @@
-"use client";
-import React, { useState, useMemo, useEffect } from "react";
+import React from "react";
 import { getUsersByRole } from "./../../repository/user/getUsers";
 
-interface Manager {
+interface Investor {
   name: string;
   walletAddress: string;
   lots: { length: number }[];
 }
 
-export default function ClientsPage() {
-  const [managers, setManagers] = useState<Manager[]>([]);
-
-  useEffect(() => {
-    async function fetchManagers() {
-      const data = await getUsersByRole("manager");
-      setManagers(data);
-    }
-
-    fetchManagers();
-  }, []);
-
+export default async function ClientsPage() {
+  const investors = await getUsersByRole("investor");
 
   return (
     <div className="space-y-12 px-8">
       <div className="border-b border-gray-900/10 pb-12">
-        <h1 className="text-4xl font-bold">Farm Managers List</h1>
+        <h1 className="text-4xl font-bold">Investors List</h1>
       </div>
 
       <div className="flex flex-col w-full">
@@ -33,18 +22,15 @@ export default function ClientsPage() {
             <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
               <tr>
                 <th scope="col" className="px-6 py-3">
-                  Manager Name
+                  Investor Name
                 </th>
                 <th scope="col" className="px-6 py-3">
                   Wallet Address
                 </th>
-                <th scope="col" className="px-6 py-3">
-                  Certified
-                </th>
               </tr>
             </thead>
             <tbody>
-              {managers.map((investor: Manager) => (
+              {investors.map((investor: Investor) => (
                 <tr className="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
                   <th
                     scope="row"
@@ -54,11 +40,6 @@ export default function ClientsPage() {
                   </th>
                   <td className="px-6 py-4">{investor.walletAddress}</td>
                   <td className="px-6 py-4">{investor.lots.length}</td>
-                    <td className="px-6 py-4">
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                      Not Certified
-                    </span>
-                    </td>
                 </tr>
               ))}
             </tbody>
