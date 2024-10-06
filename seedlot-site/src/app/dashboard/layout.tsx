@@ -1,17 +1,16 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
-import "./globals.css";
-import { WalletProvider } from "./walletProvider";
-import Nav from "@/components/Nav";
-import Link from "next/link";
+import "./../globals.css";
+import { WalletProvider } from "./../walletProvider";
+import SideNav from "@/components/Dashboard/SideNav";
 
 const geistSans = localFont({
-  src: "./fonts/GeistVF.woff",
+  src: "./../fonts/GeistVF.woff",
   variable: "--font-geist-sans",
   weight: "100 900",
 });
 const geistMono = localFont({
-  src: "./fonts/GeistMonoVF.woff",
+  src: "./../fonts/GeistMonoVF.woff",
   variable: "--font-geist-mono",
   weight: "100 900",
 });
@@ -22,19 +21,15 @@ export const metadata: Metadata = {
     "From Soil to Sip: Take Part in The Coffee Supply Chain with tree investments recorded on the blockchain",
 };
 
-
-
-
-export default function RootLayout({
+export default function DashboardLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
-    <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <WalletProvider>{children}</WalletProvider>
-      </body>
-    </html>
+    <div className="flex">
+      <SideNav />
+      <div className="grow mt-10">{children}</div>
+    </div>
   );
 }
