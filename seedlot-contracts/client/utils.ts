@@ -1,7 +1,13 @@
 import { Program, web3 } from "@coral-xyz/anchor";
 import * as anchor from "@coral-xyz/anchor";
 import { SeedlotContracts } from "../target/types/seedlot_contracts";
-import { TOKEN_2022_PROGRAM_ID } from "@solana/spl-token";
+import {
+  ASSOCIATED_TOKEN_PROGRAM_ID,
+  createMint,
+  getAssociatedTokenAddressSync,
+  TOKEN_2022_PROGRAM_ID,
+  TOKEN_PROGRAM_ID,
+} from "@solana/spl-token";
 
 const _airdrop = async <T extends anchor.Idl>(
   addy: web3.PublicKey,
@@ -74,6 +80,22 @@ export const initializeOffers = async (admin: web3.Keypair) => {
   return offersAccount;
 };
 
+export const initializeUSDC = async () => {
+  const authority = web3.Keypair.generate();
+  await airdrop(authority.publicKey);
+  const mint = await createMint(
+    program.provider.connection,
+    authority,
+    authority.publicKey,
+    null,
+    6,
+    undefined,
+    undefined,
+    TOKEN_PROGRAM_ID
+  );
+  return { mint, authority };
+};
+
 export const initialize = async () => {
   const admin = web3.Keypair.generate();
   const certificationMint = web3.Keypair.generate();
@@ -84,7 +106,16 @@ export const initialize = async () => {
     program.programId
   );
 
-  const offersAccount = await initializeOffers(admin);
+  const [offersAccount, usdc] = await Promise.all([
+    initializeOffers(admin),
+    initializeUSDC(),
+  ]);
+
+  const usdcTokenAccount = getAssociatedTokenAddressSync(
+    usdc.mint,
+    contractPK,
+    true
+  );
 
   const accounts = {
     admin: admin.publicKey,
@@ -93,6 +124,10 @@ export const initialize = async () => {
     systemProgram: web3.SystemProgram.programId,
     tokenProgram: TOKEN_2022_PROGRAM_ID,
     certificationMint: certificationMint.publicKey,
+    usdcMint: usdc.mint,
+    usdcTokenAccount: usdcTokenAccount,
+    associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+    tokenProgramStandard: TOKEN_PROGRAM_ID,
   };
   const txHash = await program.methods
     .initialize(MIN_TREES_PER_LOT, CERTIFICATION_MINT_METADATA)
@@ -107,5 +142,7 @@ export const initialize = async () => {
     certificationMint,
     admin,
     offersAccount,
+    usdcTokenAccount,
+    usdc,
   };
 };

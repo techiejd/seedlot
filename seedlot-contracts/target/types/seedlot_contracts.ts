@@ -5,7 +5,7 @@
  * IDL can be found at `target/idl/seedlot_contracts.json`.
  */
 export type SeedlotContracts = {
-  "address": "AKN2JvdTDrpLXCBrGBirWXRmNiRq33kP3obE6gMFQJUZ",
+  "address": "GeiGqJWSp41oxi1eaQyTiRSdHTJy6r15uMy1Mq2k9q3f",
   "metadata": {
     "name": "seedlotContracts",
     "version": "0.1.0",
@@ -468,6 +468,74 @@ export type SeedlotContracts = {
         {
           "name": "rent",
           "address": "SysvarRent111111111111111111111111111111111"
+        },
+        {
+          "name": "usdcMint"
+        },
+        {
+          "name": "usdcTokenAccount",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "contract"
+              },
+              {
+                "kind": "account",
+                "path": "tokenProgramStandard"
+              },
+              {
+                "kind": "account",
+                "path": "usdcMint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "associatedTokenProgram",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "tokenProgramStandard",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
         }
       ],
       "args": [
@@ -589,6 +657,14 @@ export type SeedlotContracts = {
           },
           {
             "name": "offersAccount",
+            "type": "pubkey"
+          },
+          {
+            "name": "usdcMint",
+            "type": "pubkey"
+          },
+          {
+            "name": "usdcTokenAccount",
             "type": "pubkey"
           }
         ]

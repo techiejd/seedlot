@@ -15,7 +15,6 @@ describe("Offers", () => {
     ({ admin, contractPK, offersAccount } = await initialize());
   });
   it("Works with a single offer", async () => {
-    console.log("Adding offers");
     const orderMint = web3.Keypair.generate();
     const orderMintMetadata: MintMetadata = {
       name: `Offer Mint`,
@@ -52,7 +51,6 @@ describe("Offers", () => {
       ["price", `price`],
     ]);
     const offers = await program.account.offers.fetch(offersAccount.publicKey);
-    console.log(offers);
     expect(offers.offers[0].mint.equals(orderMint.publicKey)).toBe(true);
     expect(offers.tail.eqn(1)).toBe(true);
   });
@@ -60,10 +58,8 @@ describe("Offers", () => {
   /*
   it("Allows the admin to add an offer until the limit is reached", async () => {
     const orderMints = [];
-    console.log("Adding offers");
     await Promise.all(
       [...Array(TOTAL_OFFERS)].map(async (_, i) => {
-        console.log("Adding offer", i);
         const orderMint = web3.Keypair.generate();
         orderMints.push(orderMint.publicKey);
         const orderMintMetadata: MintMetadata = {
@@ -103,7 +99,6 @@ describe("Offers", () => {
       })
     );
     const offers = await program.account.offers.fetch(offersAccount.publicKey);
-    console.log(offers);
     orderMints.map((o) =>
       expect(
         offers.offers.find((offer) => offer.mint.equals(o))

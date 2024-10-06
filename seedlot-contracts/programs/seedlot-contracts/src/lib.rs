@@ -1,5 +1,8 @@
 use anchor_lang::prelude::*;
+use anchor_spl::associated_token::AssociatedToken;
+use anchor_spl::token::Token;
 use anchor_spl::token_2022::Token2022;
+use anchor_spl::token_interface::{Mint, TokenAccount};
 
 mod certify;
 mod contract;
@@ -12,7 +15,7 @@ pub use contract::*;
 pub use errors::*;
 pub use offers::*;
 use utils::{init_mint, InitMint, InitMintBumps, MintMetadata};
-declare_id!("AKN2JvdTDrpLXCBrGBirWXRmNiRq33kP3obE6gMFQJUZ");
+declare_id!("GeiGqJWSp41oxi1eaQyTiRSdHTJy6r15uMy1Mq2k9q3f");
 
 #[program]
 pub mod seedlot_contracts {
@@ -48,6 +51,8 @@ pub mod seedlot_contracts {
         contract.offers_account = ctx.accounts.offers_account.key();
         contract.min_trees_per_lot = min_trees_per_lot;
         contract.certification_mint = ctx.accounts.certification_mint.key();
+        contract.usdc_token_account = ctx.accounts.usdc_token_account.key();
+        contract.usdc_mint = ctx.accounts.usdc_mint.key();
         Ok(())
     }
 
@@ -86,4 +91,15 @@ pub struct Initialize<'info> {
     pub system_program: Program<'info, System>,
     pub token_program: Program<'info, Token2022>,
     pub rent: Sysvar<'info, Rent>,
+    pub usdc_mint: InterfaceAccount<'info, Mint>,
+    #[account(
+        init,
+        payer = admin,
+        associated_token::mint = usdc_mint,
+        associated_token::authority = contract,
+        associated_token::token_program = token_program_standard
+    )]
+    pub usdc_token_account: InterfaceAccount<'info, TokenAccount>,
+    pub associated_token_program: Program<'info, AssociatedToken>,
+    pub token_program_standard: Program<'info, Token>,
 }

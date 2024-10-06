@@ -6,6 +6,10 @@ import {
   ExtensionType,
   TOKEN_2022_PROGRAM_ID,
   getTokenMetadata,
+  TOKEN_PROGRAM_ID,
+  ASSOCIATED_TOKEN_PROGRAM_ID,
+  getAccount,
+  getAssociatedTokenAddressSync,
 } from "@solana/spl-token";
 import {
   Contract,
@@ -17,6 +21,7 @@ import {
   CERTIFICATION_MINT_METADATA,
   initializeOffers,
   TOTAL_OFFERS,
+  initializeUSDC,
 } from "../client/utils";
 
 describe("initializing", () => {
@@ -25,6 +30,8 @@ describe("initializing", () => {
   let contract: Contract;
   let certificationMint: web3.Keypair;
   let offersAccount: web3.Keypair;
+  let usdcMint: web3.PublicKey;
+  let usdcTokenAccount: web3.PublicKey;
   beforeAll(async () => {
     admin = web3.Keypair.generate();
     await airdrop(admin.publicKey);
@@ -37,7 +44,15 @@ describe("initializing", () => {
         program.programId
       );
       certificationMint = web3.Keypair.generate();
-      offersAccount = await initializeOffers(admin);
+      [offersAccount, { mint: usdcMint }] = await Promise.all([
+        initializeOffers(admin),
+        initializeUSDC(),
+      ]);
+      usdcTokenAccount = getAssociatedTokenAddressSync(
+        usdcMint,
+        contractPK,
+        true
+      );
       const accounts = {
         admin: admin.publicKey,
         contract: contractPK,
@@ -45,8 +60,11 @@ describe("initializing", () => {
         systemProgram: web3.SystemProgram.programId,
         tokenProgram: TOKEN_2022_PROGRAM_ID,
         certificationMint: certificationMint.publicKey,
+        usdcMint,
+        usdcTokenAccount: usdcTokenAccount,
+        associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+        tokenProgramStandard: TOKEN_PROGRAM_ID,
       };
-
       const txHash = await program.methods
         .initialize(MIN_TREES_PER_LOT, CERTIFICATION_MINT_METADATA)
         .accounts(accounts)
@@ -119,5 +137,19 @@ describe("initializing", () => {
     test.todo(
       "Sets the percentage that the managers will receive in taking on an order"
     );
+    it("Sets the USDC token account", async () => {
+      expect(contract.usdcTokenAccount).toEqual(usdcTokenAccount);
+      const tokenAccount = await getAccount(
+        program.provider.connection,
+        contract.usdcTokenAccount
+      );
+      expect(tokenAccount.owner).toEqual(contractPK);
+      expect(tokenAccount.amount).toEqual(BigInt(0));
+      expect(tokenAccount.isInitialized).toBe(true);
+      expect(tokenAccount.mint).toEqual(usdcMint);
+    });
+    it("Sets the USDC mint", async () => {
+      expect(contract.usdcMint).toEqual(usdcMint);
+    });
   });
 });

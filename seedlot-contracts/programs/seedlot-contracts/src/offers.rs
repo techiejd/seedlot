@@ -43,9 +43,7 @@ impl Offers {
             SeedlotContractsError::OffersFull
         );
         self.offers[self.tail as usize] = offer;
-        msg!("tail: {:?}", self.tail);
         self.tail += 1;
-        msg!("tail: {:?}", self.tail);
         Ok(())
     }
 }
