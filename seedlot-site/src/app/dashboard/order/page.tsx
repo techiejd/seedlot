@@ -1,5 +1,8 @@
 "use client";
 import React, { useState } from "react";
+import usePlaceOrder, { Order } from "@/app/hooks/usePlaceOrder"; // assuming the hook is saved here
+import { PublicKey } from "@solana/web3.js";
+import { useWallet } from "@solana/wallet-adapter-react";
 
 const treesPerLot = 100;
 const baseCostPerTree = 10;
@@ -80,7 +83,7 @@ const lotInfo: {
         {
           type: "Liberica",
           costPerLot: baseCostPerTree * 0.8 * treesPerLot,
-          annualReturnPerLot:  baseReturnPerTreePerYear * 0.8 * treesPerLot,
+          annualReturnPerLot: baseReturnPerTreePerYear * 0.8 * treesPerLot,
           cultivationPeriod: 3,
         },
       ],
@@ -90,7 +93,7 @@ const lotInfo: {
   ],
 };
 
-export default function CalculatorPage() {
+export default function OrderPage() {
   // States
   const [selectedFarm, setSelectedFarm] = useState<
     "toraja" | "kintamani" | "sarawak"
@@ -105,12 +108,42 @@ export default function CalculatorPage() {
   const [cultivationPeriod, setCultivationPeriod] = useState(0);
   const [annualReturn, setAnnualReturn] = useState(0);
   const [roi, setRoi] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const { placeOrder } = usePlaceOrder(); // this is your custom hook to place an order
+  const wallet = useWallet();
 
   // Handlers
   const handleFarmChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     const newFarm = event.target.value as "toraja" | "kintamani" | "sarawak";
     setSelectedFarm(newFarm);
     setMaxLots(lotInfo[newFarm][0].lotsPerOrder);
+  };
+
+  const orderDetails: Order = {
+    mintIndexInOffers: 0, // Index of the token offer
+    mint: new PublicKey("INSERT_MINT_ADDRESS_HERE"), // Replace with actual mint address
+    amount: 1000, // Number of tokens you want to purchase
+  };
+
+
+  const handlePlaceOrder = async () => {
+    if (!wallet.connected) {
+      setError("Wallet is not connected.");
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+    try {
+      await placeOrder(orderDetails);
+      alert("Order placed successfully!");
+    } catch (err) {
+      console.error("Failed to place order:", err);
+      setError("Failed to place order.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleTreeTypeChange = (
@@ -131,15 +164,22 @@ export default function CalculatorPage() {
       return;
     }
 
-
     console.log("selected tree data", selectedTreeData);
     console.log("numberOfLotsToPurchase", numberOfLotsToPurchase);
     console.log("cultivationPeriod", selectedTreeData.cultivationPeriod);
 
     setTotalCost(selectedTreeData.costPerLot * numberOfLotsToPurchase);
-    setTotalReturn(selectedTreeData.annualReturnPerLot * numberOfLotsToPurchase * (25 - selectedTreeData.cultivationPeriod));
-    setAnnualReturn(selectedTreeData.annualReturnPerLot * numberOfLotsToPurchase);
-    setRoi((selectedTreeData.annualReturnPerLot / selectedTreeData.costPerLot) * 100 );
+    setTotalReturn(
+      selectedTreeData.annualReturnPerLot *
+        numberOfLotsToPurchase *
+        (25 - selectedTreeData.cultivationPeriod)
+    );
+    setAnnualReturn(
+      selectedTreeData.annualReturnPerLot * numberOfLotsToPurchase
+    );
+    setRoi(
+      (selectedTreeData.annualReturnPerLot / selectedTreeData.costPerLot) * 100
+    );
     setCultivationPeriod(selectedTreeData.cultivationPeriod);
   };
 
@@ -203,20 +243,20 @@ export default function CalculatorPage() {
               How Many Lots would you like to purchase
             </label>
             {selectedFarm && (
-              <input 
-              type="number"
-              className="p-2 border rounded"
-              max={maxLots}
-              value={numberOfLotsToPurchase}
-              onChange={(e) => {
-                const value = Number(e.target.value);
-                if (value <= maxLots) {
-                  setNumberOfLotsToPurchase(value);
-                } else {
-                  setNumberOfLotsToPurchase(maxLots); // Optionally, set to maxLots if value exceeds max
-                }
-              }}
-            />
+              <input
+                type="number"
+                className="p-2 border rounded"
+                max={maxLots}
+                value={numberOfLotsToPurchase}
+                onChange={(e) => {
+                  const value = Number(e.target.value);
+                  if (value <= maxLots) {
+                    setNumberOfLotsToPurchase(value);
+                  } else {
+                    setNumberOfLotsToPurchase(maxLots); // Optionally, set to maxLots if value exceeds max
+                  }
+                }}
+              />
             )}
             <p className="mt-3 text-sm leading-6 text-gray-600">
               You can purchase up to {maxLots} lots at one time from this Farm
@@ -245,34 +285,35 @@ export default function CalculatorPage() {
               </tr>
             </thead>
             <tbody>
-                <tr>
+              <tr>
                 <td className="px-4 py-2 text-left">
                   ${totalCost.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
                 </td>
                 <td className="px-4 py-2 text-left">
-                  ${(totalReturn)
-                  .toFixed(0)
-                  .replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
+                  $
+                  {totalReturn.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
                 </td>
                 <td className="px-4 py-2 text-left">
                   {cultivationPeriod.toFixed(0)} years
                 </td>
                 <td className="px-4 py-2 text-left">
-                  ${annualReturn
-                  .toFixed(0)
-                  .replace(/\B(?=(\d{3})+(?!\d))/g, ",")}{" "}
+                  $
+                  {annualReturn
+                    .toFixed(0)
+                    .replace(/\B(?=(\d{3})+(?!\d))/g, ",")}{" "}
                   (after year 3)
                 </td>
                 <td className="px-4 py-2 text-left">
                   {roi.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}% (over
                   25 years)
                 </td>
-                </tr>
+              </tr>
             </tbody>
           </table>
 
           <div className="mt-6 flex items-right justify-right ">
             <button
+              onClick={handlePlaceOrder}
               className=" rounded-md bg-green-900 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-green-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
             >
               Place Order

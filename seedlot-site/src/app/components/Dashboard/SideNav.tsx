@@ -15,8 +15,8 @@ interface MenuItem {
 
 const commonMenuItems: MenuItem[] = [
   {
-    name: "Calculator",
-    href: "/dashboard/calculator",
+    name: "Place Order",
+    href: "/dashboard/order",
     icon: "icon here"
   },
   {

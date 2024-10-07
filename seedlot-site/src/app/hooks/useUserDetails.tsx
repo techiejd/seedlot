@@ -1,50 +1,36 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
+import { useUserContext } from "@/app/contexts/UserContext";
 import { useWallet } from "@solana/wallet-adapter-react";
-
-
+import { getUserByWalletAddress } from "@/app/repository/user/getUser";
 
 // Custom hook to manage user details
 export const useUserDetails = () => {
-  const [userDetails, setUserDetails] = useState(null); // User details state
-  const [registrationRequired, setRegistrationRequired] = useState(false); // User details state
   const { publicKey, connected } = useWallet();
+  const {
+    userDetails,
+    setUserDetails,
+    userDetailsNotFound,
+    setUserDetailsNotFound,
+  } = useUserContext();
 
-  const fetchUserDetails = async () => {
-    try {
-        const response = await fetch(`/api/user/${publicKey?.toString()}`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch user");
+  useMemo(() => {
+    if (!publicKey) {
+      setUserDetails(null);
+      return;
+    }
+    getUserByWalletAddress(publicKey.toString()).then((user) => {
+      if (!user) {
+        setUserDetailsNotFound(true);
+      } else {
+        setUserDetails(user);
       }
-
-      const result = await response.json();
-      setUserDetails(result.user);
-    } catch (error) {
-      console.error("Error fetching user data:", error);
-      throw new Error("Unable to fetch user data");
-    }
-  };
-
-
-  useEffect(() => {
-    if(!connected) {
-        setUserDetails(null);
-        return
-    }
-    if(publicKey && connected && !userDetails) {
-        fetchUserDetails();
-        setRegistrationRequired
-    }
+    });
   }, [connected]);
 
-  
   return {
     userDetails,
-    registrationRequired
+    setUserDetails,
+    userDetailsNotFound,
+    setUserDetailsNotFound,
   };
 };
