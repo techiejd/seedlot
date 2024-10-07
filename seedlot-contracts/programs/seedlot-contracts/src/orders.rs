@@ -50,7 +50,7 @@ pub mod instructions {
 
         // USDC has 6 decimals, so we need to convert the price to the correct number of decimal places
         let price_in_usdc = price_in_cents * 10u64.pow(4);
-        let total_price = price_in_usdc * order_quantity * ctx.accounts.contract.min_trees_per_lot;
+        let total_price = price_in_usdc * order_quantity * ctx.accounts.contract.trees_per_lot;
 
         // Now we need to transfer `price_in_usdc` USDC from the user to the contract
         let transfer_ctx = Transfer {

@@ -15,7 +15,7 @@ import {
   Contract,
   airdrop,
   program,
-  MIN_TREES_PER_LOT,
+  TREES_PER_LOT,
   confirmTx,
   CERTIFICATION_MINT_METADATA,
   initializeZeroAccount,
@@ -69,7 +69,7 @@ describe("initializing", () => {
         tokenProgramStandard: TOKEN_PROGRAM_ID,
       };
       const txHash = await program.methods
-        .initialize(MIN_TREES_PER_LOT, CERTIFICATION_MINT_METADATA)
+        .initialize(TREES_PER_LOT, CERTIFICATION_MINT_METADATA)
         .accounts(accounts)
         .signers([admin, certificationMint])
         .preInstructions([
@@ -87,7 +87,7 @@ describe("initializing", () => {
       expect(contract.admin).toStrictEqual(admin.publicKey);
     });
     it("Sets the number of minimum trees in a lot", async () => {
-      expect(contract.minTreesPerLot.eq(MIN_TREES_PER_LOT)).toBe(true);
+      expect(contract.treesPerLot.eq(TREES_PER_LOT)).toBe(true);
     });
     describe("certification Mint", () => {
       it("Sets a certification mint", () => {

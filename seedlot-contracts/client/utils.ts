@@ -58,7 +58,7 @@ export const CERTIFICATION_MINT_METADATA: MintMetadata = {
   uri: "https://app.seedlot.io/certification",
   locationVarietyPrice: null,
 };
-export const MIN_TREES_PER_LOT = new anchor.BN(10);
+export const TREES_PER_LOT = new anchor.BN(10);
 export const PRICE_PER_TREE = "1500";
 
 export const initializeZeroAccount = async (
@@ -134,7 +134,7 @@ export const initialize = async () => {
     tokenProgramStandard: TOKEN_PROGRAM_ID,
   };
   const txHash = await program.methods
-    .initialize(MIN_TREES_PER_LOT, CERTIFICATION_MINT_METADATA)
+    .initialize(TREES_PER_LOT, CERTIFICATION_MINT_METADATA)
     .accounts(accounts)
     .signers([admin, certificationMint])
     .rpc();

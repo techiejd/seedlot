@@ -29,7 +29,7 @@ pub mod seedlot_contracts {
 
     pub fn initialize<'info>(
         ctx: Context<'_, '_, '_, 'info, Initialize<'info>>,
-        min_trees_per_lot: u64,
+        trees_per_lot: u64,
         certification_mint_metadata: MintMetadata,
     ) -> Result<()> {
         init_mint(
@@ -56,7 +56,7 @@ pub mod seedlot_contracts {
         contract.admin = ctx.accounts.admin.key();
         contract.offers_account = ctx.accounts.offers_account.key();
         contract.lots_account = ctx.accounts.lots_account.key();
-        contract.min_trees_per_lot = min_trees_per_lot;
+        contract.trees_per_lot = trees_per_lot;
         contract.certification_mint = ctx.accounts.certification_mint.key();
         contract.usdc_token_account = ctx.accounts.contract_usdc_token_account.key();
         contract.usdc_mint = ctx.accounts.usdc_mint.key();

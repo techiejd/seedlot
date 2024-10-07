@@ -1,9 +1,11 @@
 .anchor
 .DS_Store
 target/**/*
-# But don't ignore the types directory
+# But don't ignore the types or idl directory
 !target/types
 !target/types/*
+!target/idl
+!target/idl/*
 **/*.rs.bk
 node_modules
 test-ledger

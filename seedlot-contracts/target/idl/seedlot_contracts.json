@@ -1,20 +1,14 @@
-/**
- * Program IDL in camelCase format in order to be used in JS/TS.
- *
- * Note that this is only a type helper and is not the actual IDL. The original
- * IDL can be found at `target/idl/seedlot_contracts.json`.
- */
-export type SeedlotContracts = {
+{
   "address": "5CcnQXqN7sJM1WqGJwvcgnoD51YDnCvXV3HxappzXpsh",
   "metadata": {
-    "name": "seedlotContracts",
+    "name": "seedlot_contracts",
     "version": "0.1.0",
     "spec": "0.1.0",
     "description": "Created with Anchor"
   },
   "instructions": [
     {
-      "name": "addOffer",
+      "name": "add_offer",
       "discriminator": [
         139,
         28,
@@ -56,20 +50,20 @@ export type SeedlotContracts = {
           }
         },
         {
-          "name": "offersAccount",
+          "name": "offers_account",
           "writable": true
         },
         {
-          "name": "orderMint",
+          "name": "order_mint",
           "writable": true,
           "signer": true
         },
         {
-          "name": "systemProgram",
+          "name": "system_program",
           "address": "11111111111111111111111111111111"
         },
         {
-          "name": "tokenProgram",
+          "name": "token_program",
           "address": "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"
         },
         {
@@ -79,10 +73,10 @@ export type SeedlotContracts = {
       ],
       "args": [
         {
-          "name": "offerMintMetadata",
+          "name": "offer_mint_metadata",
           "type": {
             "defined": {
-              "name": "mintMetadata"
+              "name": "MintMetadata"
             }
           }
         }
@@ -134,11 +128,11 @@ export type SeedlotContracts = {
           }
         },
         {
-          "name": "certificationMint",
+          "name": "certification_mint",
           "writable": true
         },
         {
-          "name": "managerTo",
+          "name": "manager_to",
           "writable": true,
           "pda": {
             "seeds": [
@@ -185,7 +179,7 @@ export type SeedlotContracts = {
               },
               {
                 "kind": "account",
-                "path": "certificationMint"
+                "path": "certification_mint"
               }
             ],
             "program": {
@@ -228,24 +222,24 @@ export type SeedlotContracts = {
           }
         },
         {
-          "name": "associatedTokenProgram",
+          "name": "associated_token_program",
           "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
         },
         {
-          "name": "tokenProgram",
+          "name": "token_program",
           "address": "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"
         },
         {
-          "name": "systemProgram",
+          "name": "system_program",
           "address": "11111111111111111111111111111111"
         }
       ],
       "args": [
         {
-          "name": "newTier",
+          "name": "new_tier",
           "type": {
             "defined": {
-              "name": "certificationTier"
+              "name": "CertificationTier"
             }
           }
         }
@@ -297,11 +291,11 @@ export type SeedlotContracts = {
           }
         },
         {
-          "name": "certificationMint",
+          "name": "certification_mint",
           "writable": true
         },
         {
-          "name": "managerTo",
+          "name": "manager_to",
           "writable": true,
           "pda": {
             "seeds": [
@@ -348,7 +342,7 @@ export type SeedlotContracts = {
               },
               {
                 "kind": "account",
-                "path": "certificationMint"
+                "path": "certification_mint"
               }
             ],
             "program": {
@@ -391,15 +385,15 @@ export type SeedlotContracts = {
           }
         },
         {
-          "name": "associatedTokenProgram",
+          "name": "associated_token_program",
           "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
         },
         {
-          "name": "tokenProgram",
+          "name": "token_program",
           "address": "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"
         },
         {
-          "name": "systemProgram",
+          "name": "system_program",
           "address": "11111111111111111111111111111111"
         }
       ],
@@ -444,16 +438,16 @@ export type SeedlotContracts = {
           }
         },
         {
-          "name": "certificationMint",
+          "name": "certification_mint",
           "writable": true,
           "signer": true
         },
         {
-          "name": "offersAccount",
+          "name": "offers_account",
           "writable": true
         },
         {
-          "name": "lotsAccount",
+          "name": "lots_account",
           "writable": true
         },
         {
@@ -462,11 +456,11 @@ export type SeedlotContracts = {
           "signer": true
         },
         {
-          "name": "systemProgram",
+          "name": "system_program",
           "address": "11111111111111111111111111111111"
         },
         {
-          "name": "tokenProgram",
+          "name": "token_program",
           "address": "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"
         },
         {
@@ -474,10 +468,10 @@ export type SeedlotContracts = {
           "address": "SysvarRent111111111111111111111111111111111"
         },
         {
-          "name": "usdcMint"
+          "name": "usdc_mint"
         },
         {
-          "name": "contractUsdcTokenAccount",
+          "name": "contract_usdc_token_account",
           "writable": true,
           "pda": {
             "seeds": [
@@ -487,11 +481,11 @@ export type SeedlotContracts = {
               },
               {
                 "kind": "account",
-                "path": "tokenProgramStandard"
+                "path": "token_program_standard"
               },
               {
                 "kind": "account",
-                "path": "usdcMint"
+                "path": "usdc_mint"
               }
             ],
             "program": {
@@ -534,31 +528,31 @@ export type SeedlotContracts = {
           }
         },
         {
-          "name": "associatedTokenProgram",
+          "name": "associated_token_program",
           "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
         },
         {
-          "name": "tokenProgramStandard",
+          "name": "token_program_standard",
           "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
         }
       ],
       "args": [
         {
-          "name": "treesPerLot",
+          "name": "trees_per_lot",
           "type": "u64"
         },
         {
-          "name": "certificationMintMetadata",
+          "name": "certification_mint_metadata",
           "type": {
             "defined": {
-              "name": "mintMetadata"
+              "name": "MintMetadata"
             }
           }
         }
       ]
     },
     {
-      "name": "placeOrder",
+      "name": "place_order",
       "discriminator": [
         51,
         194,
@@ -596,23 +590,23 @@ export type SeedlotContracts = {
               {
                 "kind": "account",
                 "path": "contract.admin",
-                "account": "contract"
+                "account": "Contract"
               }
             ]
           }
         },
         {
-          "name": "offersAccount",
+          "name": "offers_account",
           "relations": [
             "contract"
           ]
         },
         {
-          "name": "offerMint",
+          "name": "offer_mint",
           "writable": true
         },
         {
-          "name": "userTokenAccount",
+          "name": "user_token_account",
           "writable": true,
           "pda": {
             "seeds": [
@@ -659,7 +653,7 @@ export type SeedlotContracts = {
               },
               {
                 "kind": "account",
-                "path": "offerMint"
+                "path": "offer_mint"
               }
             ],
             "program": {
@@ -702,25 +696,25 @@ export type SeedlotContracts = {
           }
         },
         {
-          "name": "associatedTokenProgram",
+          "name": "associated_token_program",
           "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
         },
         {
-          "name": "tokenProgram",
+          "name": "token_program",
           "address": "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"
         },
         {
-          "name": "systemProgram",
+          "name": "system_program",
           "address": "11111111111111111111111111111111"
         },
         {
-          "name": "usdcMint",
+          "name": "usdc_mint",
           "relations": [
             "contract"
           ]
         },
         {
-          "name": "usdcFrom",
+          "name": "usdc_from",
           "writable": true,
           "pda": {
             "seeds": [
@@ -767,7 +761,7 @@ export type SeedlotContracts = {
               },
               {
                 "kind": "account",
-                "path": "usdcMint"
+                "path": "usdc_mint"
               }
             ],
             "program": {
@@ -810,7 +804,7 @@ export type SeedlotContracts = {
           }
         },
         {
-          "name": "contractUsdcTokenAccount",
+          "name": "contract_usdc_token_account",
           "writable": true,
           "pda": {
             "seeds": [
@@ -857,7 +851,7 @@ export type SeedlotContracts = {
               },
               {
                 "kind": "account",
-                "path": "usdcMint"
+                "path": "usdc_mint"
               }
             ],
             "program": {
@@ -900,17 +894,17 @@ export type SeedlotContracts = {
           }
         },
         {
-          "name": "tokenProgramStandard",
+          "name": "token_program_standard",
           "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
         }
       ],
       "args": [
         {
-          "name": "offerIndex",
+          "name": "offer_index",
           "type": "u64"
         },
         {
-          "name": "orderQuantity",
+          "name": "order_quantity",
           "type": "u64"
         }
       ]
@@ -918,7 +912,7 @@ export type SeedlotContracts = {
   ],
   "accounts": [
     {
-      "name": "contract",
+      "name": "Contract",
       "discriminator": [
         172,
         138,
@@ -931,7 +925,7 @@ export type SeedlotContracts = {
       ]
     },
     {
-      "name": "lots",
+      "name": "Lots",
       "discriminator": [
         76,
         173,
@@ -944,7 +938,7 @@ export type SeedlotContracts = {
       ]
     },
     {
-      "name": "offers",
+      "name": "Offers",
       "discriminator": [
         160,
         63,
@@ -960,52 +954,52 @@ export type SeedlotContracts = {
   "errors": [
     {
       "code": 6000,
-      "name": "adminCannotBeCertified"
+      "name": "AdminCannotBeCertified"
     },
     {
       "code": 6001,
-      "name": "certificationsMustIncreaseByOneTier"
+      "name": "CertificationsMustIncreaseByOneTier"
     },
     {
       "code": 6002,
-      "name": "cannotCertifyAboveTierFour"
+      "name": "CannotCertifyAboveTierFour"
     },
     {
       "code": 6003,
-      "name": "noCertificationTierZero"
+      "name": "NoCertificationTierZero"
     },
     {
       "code": 6004,
-      "name": "managerAlreadyDecertified"
+      "name": "ManagerAlreadyDecertified"
     },
     {
       "code": 6005,
-      "name": "offersFull"
+      "name": "OffersFull"
     },
     {
       "code": 6006,
-      "name": "invalidOfferIndex"
+      "name": "InvalidOfferIndex"
     },
     {
       "code": 6007,
-      "name": "orderMintNotFound"
+      "name": "OrderMintNotFound"
     },
     {
       "code": 6008,
-      "name": "additionalMetadataIllFormed"
+      "name": "AdditionalMetadataIllFormed"
     },
     {
       "code": 6009,
-      "name": "invalidPrice"
+      "name": "InvalidPrice"
     },
     {
       "code": 6010,
-      "name": "lotsFull"
+      "name": "LotsFull"
     }
   ],
   "types": [
     {
-      "name": "certificationTier",
+      "name": "CertificationTier",
       "repr": {
         "kind": "rust"
       },
@@ -1013,28 +1007,28 @@ export type SeedlotContracts = {
         "kind": "enum",
         "variants": [
           {
-            "name": "undefined"
+            "name": "Undefined"
           },
           {
-            "name": "tier1"
+            "name": "Tier1"
           },
           {
-            "name": "tier2"
+            "name": "Tier2"
           },
           {
-            "name": "tier3"
+            "name": "Tier3"
           },
           {
-            "name": "tier4"
+            "name": "Tier4"
           },
           {
-            "name": "decertified"
+            "name": "Decertified"
           }
         ]
       }
     },
     {
-      "name": "contract",
+      "name": "Contract",
       "type": {
         "kind": "struct",
         "fields": [
@@ -1043,34 +1037,34 @@ export type SeedlotContracts = {
             "type": "pubkey"
           },
           {
-            "name": "treesPerLot",
+            "name": "trees_per_lot",
             "type": "u64"
           },
           {
-            "name": "certificationMint",
+            "name": "certification_mint",
             "type": "pubkey"
           },
           {
-            "name": "offersAccount",
+            "name": "offers_account",
             "type": "pubkey"
           },
           {
-            "name": "usdcMint",
+            "name": "usdc_mint",
             "type": "pubkey"
           },
           {
-            "name": "usdcTokenAccount",
+            "name": "usdc_token_account",
             "type": "pubkey"
           },
           {
-            "name": "lotsAccount",
+            "name": "lots_account",
             "type": "pubkey"
           }
         ]
       }
     },
     {
-      "name": "lotMint",
+      "name": "LotMint",
       "serialization": "bytemuck",
       "repr": {
         "kind": "c"
@@ -1086,7 +1080,7 @@ export type SeedlotContracts = {
       }
     },
     {
-      "name": "lots",
+      "name": "Lots",
       "serialization": "bytemuck",
       "repr": {
         "kind": "c"
@@ -1108,7 +1102,7 @@ export type SeedlotContracts = {
               "array": [
                 {
                   "defined": {
-                    "name": "lotMint"
+                    "name": "LotMint"
                   }
                 },
                 10000
@@ -1119,7 +1113,7 @@ export type SeedlotContracts = {
       }
     },
     {
-      "name": "mintMetadata",
+      "name": "MintMetadata",
       "type": {
         "kind": "struct",
         "fields": [
@@ -1136,7 +1130,7 @@ export type SeedlotContracts = {
             "type": "string"
           },
           {
-            "name": "locationVarietyPrice",
+            "name": "location_variety_price",
             "type": {
               "option": {
                 "array": [
@@ -1150,7 +1144,7 @@ export type SeedlotContracts = {
       }
     },
     {
-      "name": "offer",
+      "name": "Offer",
       "serialization": "bytemuck",
       "repr": {
         "kind": "c"
@@ -1166,7 +1160,7 @@ export type SeedlotContracts = {
       }
     },
     {
-      "name": "offers",
+      "name": "Offers",
       "serialization": "bytemuck",
       "repr": {
         "kind": "c"
@@ -1188,7 +1182,7 @@ export type SeedlotContracts = {
               "array": [
                 {
                   "defined": {
-                    "name": "offer"
+                    "name": "Offer"
                   }
                 },
                 300
@@ -1201,14 +1195,14 @@ export type SeedlotContracts = {
   ],
   "constants": [
     {
-      "name": "totalLots",
+      "name": "TOTAL_LOTS",
       "type": "u64",
       "value": "10000"
     },
     {
-      "name": "totalOffers",
+      "name": "TOTAL_OFFERS",
       "type": "u64",
       "value": "300"
     }
   ]
-};
+}

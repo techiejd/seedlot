@@ -2,7 +2,7 @@ import * as anchor from "@coral-xyz/anchor";
 import {
   airdrop,
   initialize,
-  MIN_TREES_PER_LOT,
+  TREES_PER_LOT,
   MintMetadata,
   PRICE_PER_TREE,
   program,
@@ -136,7 +136,7 @@ describe("Offers", () => {
       userUsdcAccountBefore.amount -
         BigInt(
           numOrders *
-            MIN_TREES_PER_LOT.toNumber() *
+            TREES_PER_LOT.toNumber() *
             Number(PRICE_PER_TREE) *
             10 ** 4
         )

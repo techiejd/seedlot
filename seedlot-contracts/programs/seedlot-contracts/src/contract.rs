@@ -7,7 +7,7 @@ const U64_LENGTH: usize = 8;
 impl Contract {
     pub const LEN: usize = DISCRIMINATOR_LENGTH
         + PUBLIC_KEY_LENGTH // admin
-        + U64_LENGTH // min_trees_per_lot
+        + U64_LENGTH // trees_per_lot
         + PUBLIC_KEY_LENGTH // certification_mint
         + PUBLIC_KEY_LENGTH // offers_account
         + PUBLIC_KEY_LENGTH // usdc_mint
@@ -18,7 +18,7 @@ impl Contract {
 #[account]
 pub struct Contract {
     pub admin: Pubkey,
-    pub min_trees_per_lot: u64,
+    pub trees_per_lot: u64,
     pub certification_mint: Pubkey,
     pub offers_account: Pubkey,
     pub usdc_mint: Pubkey,

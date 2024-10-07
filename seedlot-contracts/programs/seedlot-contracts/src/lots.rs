@@ -100,7 +100,7 @@ pub mod instructions {
             .parse::<u64>()
             .map_err(|_| SeedlotContractsError::InvalidPrice)?;
         let price_in_usdc = price_in_cents * 10u64.pow(4);
-        let total_price = price_in_usdc * order_quantity * ctx.accounts.contract.min_trees_per_lot;
+        let total_price = price_in_usdc * order_quantity * ctx.accounts.contract.trees_per_lot;
         let manager_fee = total_price / 10; // 10% of the total price
 
         let transfer_ctx = CpiContext::new(
