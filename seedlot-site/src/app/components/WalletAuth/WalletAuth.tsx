@@ -1,22 +1,9 @@
 // import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 import dynamic from "next/dynamic";
 import Image from "next/image";
-import { useProgramContext } from "@/app/contexts/ProgramContext";
-import { useWallet } from "@solana/wallet-adapter-react";
-import { useEffect } from "react";
 
 // WalletAuth component
 export const WalletAuth = () => {
-  const { program, contract, contractAddress } = useProgramContext();
-  const wallet = useWallet();
-
-  useEffect(() => {
-    if (wallet.connected) {
-      // Make sure to load or initialize the program once the wallet is connected
-      // The program and contract details should be ready to use.
-      console.log("Program initialized:", program);
-    }
-  }, [wallet.connected]);
 
   const WalletMultiButton = dynamic(
     () =>

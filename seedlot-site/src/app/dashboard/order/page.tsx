@@ -110,7 +110,6 @@ export default function OrderPage() {
   const [roi, setRoi] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { placeOrder } = usePlaceOrder(); // this is your custom hook to place an order
   const wallet = useWallet();
 
   // Handlers
@@ -118,12 +117,6 @@ export default function OrderPage() {
     const newFarm = event.target.value as "toraja" | "kintamani" | "sarawak";
     setSelectedFarm(newFarm);
     setMaxLots(lotInfo[newFarm][0].lotsPerOrder);
-  };
-
-  const orderDetails: Order = {
-    mintIndexInOffers: 0, // Index of the token offer
-    mint: new PublicKey("INSERT_MINT_ADDRESS_HERE"), // Replace with actual mint address
-    amount: 1000, // Number of tokens you want to purchase
   };
 
 
@@ -136,7 +129,11 @@ export default function OrderPage() {
     setLoading(true);
     setError(null);
     try {
-      await placeOrder(orderDetails);
+      // await placeOrder({
+      //   mintIndexInOffers: 0, // Index of the token offer
+      //   mint: new PublicKey("INSERT_MINT_ADDRESS_HERE"), // Replace with actual mint address
+      //   amount: numberOfLotsToPurchase, // Number of tokens you want to purchase
+      // });
       alert("Order placed successfully!");
     } catch (err) {
       console.error("Failed to place order:", err);
