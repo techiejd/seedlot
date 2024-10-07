@@ -5,7 +5,7 @@
  * IDL can be found at `target/idl/seedlot_contracts.json`.
  */
 export type SeedlotContracts = {
-  "address": "6jAUUvKWWrbqVqjJNjmSU2a5EgW5Kg9caR8myyneszCF",
+  "address": "5CcnQXqN7sJM1WqGJwvcgnoD51YDnCvXV3HxappzXpsh",
   "metadata": {
     "name": "seedlotContracts",
     "version": "0.1.0",
@@ -450,6 +450,10 @@ export type SeedlotContracts = {
         },
         {
           "name": "offersAccount",
+          "writable": true
+        },
+        {
+          "name": "lotsAccount",
           "writable": true
         },
         {
@@ -927,6 +931,19 @@ export type SeedlotContracts = {
       ]
     },
     {
+      "name": "lots",
+      "discriminator": [
+        76,
+        173,
+        126,
+        180,
+        113,
+        59,
+        41,
+        182
+      ]
+    },
+    {
       "name": "offers",
       "discriminator": [
         160,
@@ -980,6 +997,10 @@ export type SeedlotContracts = {
     {
       "code": 6009,
       "name": "invalidPrice"
+    },
+    {
+      "code": 6010,
+      "name": "lotsFull"
     }
   ],
   "types": [
@@ -1040,6 +1061,59 @@ export type SeedlotContracts = {
           {
             "name": "usdcTokenAccount",
             "type": "pubkey"
+          },
+          {
+            "name": "lotsAccount",
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "lotMint",
+      "serialization": "bytemuck",
+      "repr": {
+        "kind": "c"
+      },
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "key",
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "lots",
+      "serialization": "bytemuck",
+      "repr": {
+        "kind": "c"
+      },
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "owner",
+            "type": "pubkey"
+          },
+          {
+            "name": "tail",
+            "type": "u64"
+          },
+          {
+            "name": "lots",
+            "type": {
+              "array": [
+                {
+                  "defined": {
+                    "name": "lotMint"
+                  }
+                },
+                10000
+              ]
+            }
           }
         ]
       }
@@ -1126,6 +1200,11 @@ export type SeedlotContracts = {
     }
   ],
   "constants": [
+    {
+      "name": "totalLots",
+      "type": "u64",
+      "value": "10000"
+    },
     {
       "name": "totalOffers",
       "type": "u64",

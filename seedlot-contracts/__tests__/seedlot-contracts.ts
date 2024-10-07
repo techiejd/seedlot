@@ -18,9 +18,10 @@ import {
   MIN_TREES_PER_LOT,
   confirmTx,
   CERTIFICATION_MINT_METADATA,
-  initializeOffers,
+  initializeZeroAccount,
   TOTAL_OFFERS,
   initializeUSDC,
+  TOTAL_LOTS,
 } from "../client/utils";
 
 describe("initializing", () => {
@@ -31,6 +32,7 @@ describe("initializing", () => {
   let offersAccount: web3.Keypair;
   let usdcMint: web3.PublicKey;
   let contractUsdcTokenAccount: web3.PublicKey;
+  let lotsAccount: web3.Keypair;
   beforeAll(async () => {
     admin = web3.Keypair.generate();
     await airdrop(admin.publicKey);
@@ -43,9 +45,10 @@ describe("initializing", () => {
         program.programId
       );
       certificationMint = web3.Keypair.generate();
-      [offersAccount, { mint: usdcMint }] = await Promise.all([
-        initializeOffers(admin),
+      [offersAccount, { mint: usdcMint }, lotsAccount] = await Promise.all([
+        initializeZeroAccount(admin, program.account.offers.size),
         initializeUSDC(),
+        initializeZeroAccount(admin, program.account.lots.size),
       ]);
       contractUsdcTokenAccount = getAssociatedTokenAddressSync(
         usdcMint,
@@ -56,6 +59,7 @@ describe("initializing", () => {
         admin: admin.publicKey,
         contract: contractPK,
         offersAccount: offersAccount.publicKey,
+        lotsAccount: lotsAccount.publicKey,
         systemProgram: web3.SystemProgram.programId,
         tokenProgram: TOKEN_2022_PROGRAM_ID,
         certificationMint: certificationMint.publicKey,
@@ -149,6 +153,16 @@ describe("initializing", () => {
     });
     it("Sets the USDC mint", async () => {
       expect(contract.usdcMint).toEqual(usdcMint);
+    });
+    it("Sets the Lots account", async () => {
+      expect(contract.lotsAccount).toEqual(lotsAccount.publicKey);
+      const lots = await program.account.lots.fetch(lotsAccount.publicKey);
+      expect(lots.owner).toEqual(contractPK);
+      expect(lots.tail.eqn(0)).toBe(true);
+      expect(lots.lots).toHaveLength(TOTAL_LOTS);
+      expect(
+        lots.lots.every((l) => l.key.equals(web3.SystemProgram.programId))
+      ).toBe(true);
     });
   });
 });

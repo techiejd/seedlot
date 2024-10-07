@@ -7,6 +7,7 @@ use anchor_spl::token_interface::{Mint, TokenAccount};
 mod certify;
 mod contract;
 mod errors;
+mod lots;
 mod offers;
 mod orders;
 mod utils;
@@ -14,10 +15,12 @@ mod utils;
 pub use certify::*;
 pub use contract::*;
 pub use errors::*;
+pub use lots::*;
 pub use offers::*;
 pub use orders::*;
 use utils::{init_mint, InitMint, InitMintBumps, MintMetadata};
-declare_id!("6jAUUvKWWrbqVqjJNjmSU2a5EgW5Kg9caR8myyneszCF");
+
+declare_id!("5CcnQXqN7sJM1WqGJwvcgnoD51YDnCvXV3HxappzXpsh");
 
 #[program]
 pub mod seedlot_contracts {
@@ -48,9 +51,11 @@ pub mod seedlot_contracts {
             &certification_mint_metadata,
         )?;
         ctx.accounts.offers_account.load_init()?.owner = ctx.accounts.contract.key();
+        ctx.accounts.lots_account.load_init()?.owner = ctx.accounts.contract.key();
         let contract = &mut ctx.accounts.contract;
         contract.admin = ctx.accounts.admin.key();
         contract.offers_account = ctx.accounts.offers_account.key();
+        contract.lots_account = ctx.accounts.lots_account.key();
         contract.min_trees_per_lot = min_trees_per_lot;
         contract.certification_mint = ctx.accounts.certification_mint.key();
         contract.usdc_token_account = ctx.accounts.contract_usdc_token_account.key();
@@ -78,8 +83,20 @@ pub mod seedlot_contracts {
         orders::instructions::place_order(ctx, offer_index, order_quantity)
     }
 
+    /*
+        pub fn prepare_lot(
+            ctx: Context<PrepareLot>,
+            order_index: u64,
+            order_quantity: u64,
+        ) -> Result<()> {
+            lots::instructions::prepare_lot(ctx, order_index, order_quantity)
+        }
+    */
     #[constant]
     pub const TOTAL_OFFERS: u64 = Offers::TOTAL_OFFERS;
+
+    #[constant]
+    pub const TOTAL_LOTS: u64 = Lots::TOTAL_LOTS;
 }
 
 #[derive(Accounts)]
@@ -96,6 +113,8 @@ pub struct Initialize<'info> {
     pub certification_mint: Signer<'info>,
     #[account(zero)]
     pub offers_account: AccountLoader<'info, Offers>,
+    #[account(zero)]
+    pub lots_account: AccountLoader<'info, Lots>,
     #[account(mut)]
     pub admin: Signer<'info>,
     pub system_program: Program<'info, System>,

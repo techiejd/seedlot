@@ -9,6 +9,8 @@ use anchor_spl::token_interface::{
     TokenAccount, TokenMetadataInitialize, TokenMetadataUpdateField,
 };
 use solana_program::program_option::COption;
+use spl_token_2022::extension::{BaseStateWithExtensions, PodStateWithExtensions};
+use spl_token_2022::pod::PodMint;
 use spl_token_metadata_interface::state::{Field, TokenMetadata};
 
 use anchor_lang::system_program::CreateAccount;
@@ -17,7 +19,24 @@ use spl_token_2022::{
     state::{AccountState, Mint as spl_Mint},
 };
 
-use crate::{Certify, Contract};
+use crate::{Contract, SeedlotContractsError};
+
+pub fn get_token_metadata(mint: &InterfaceAccount<Mint>) -> Result<TokenMetadata> {
+    let account_info = &mint.to_account_info();
+    let buffer = &account_info.data.borrow();
+    let mint = PodStateWithExtensions::<PodMint>::unpack(&buffer)?;
+    mint.get_variable_len_extension::<TokenMetadata>()
+        .map_err(|e| anchor_lang::error::Error::from(e))
+}
+
+pub fn get_value(metadata: &TokenMetadata, key: &str) -> Result<String> {
+    metadata
+        .additional_metadata
+        .iter()
+        .find(|&x| x.0 == key)
+        .map(|x| x.1.clone())
+        .ok_or_else(|| error!(SeedlotContractsError::AdditionalMetadataIllFormed))
+}
 
 #[derive(Accounts)]
 pub struct InitMint<'info> {

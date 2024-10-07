@@ -48,6 +48,10 @@ export const TOTAL_OFFERS = Number(
   program.idl.constants.find((c) => c.name === "totalOffers")?.value
 );
 
+export const TOTAL_LOTS = Number(
+  program.idl.constants.find((c) => c.name === "totalLots")?.value
+);
+
 export const CERTIFICATION_MINT_METADATA: MintMetadata = {
   name: "Seedlot Manager Certification",
   symbol: "SEEDLOT-MCERT",
@@ -57,27 +61,27 @@ export const CERTIFICATION_MINT_METADATA: MintMetadata = {
 export const MIN_TREES_PER_LOT = new anchor.BN(10);
 export const PRICE_PER_TREE = "1500";
 
-export const initializeOffers = async (admin: web3.Keypair) => {
-  const offersAccount = web3.Keypair.generate();
-  const offersAccountSize = program.account.offers.size;
+export const initializeZeroAccount = async (
+  admin: web3.Keypair,
+  space: number
+) => {
+  const newAccount = web3.Keypair.generate();
   const lamportsForRentExemption =
-    await program.provider.connection.getMinimumBalanceForRentExemption(
-      offersAccountSize
-    );
+    await program.provider.connection.getMinimumBalanceForRentExemption(space);
   const createAccountInstruction = web3.SystemProgram.createAccount({
     fromPubkey: admin.publicKey,
-    newAccountPubkey: offersAccount.publicKey,
+    newAccountPubkey: newAccount.publicKey,
     lamports: lamportsForRentExemption,
-    space: offersAccountSize,
+    space,
     programId: program.programId,
   });
   const transaction = new web3.Transaction().add(createAccountInstruction);
   await web3.sendAndConfirmTransaction(
     program.provider.connection,
     transaction,
-    [admin, offersAccount]
+    [admin, newAccount]
   );
-  return offersAccount;
+  return newAccount;
 };
 
 export const initializeUSDC = async () => {
@@ -107,7 +111,7 @@ export const initialize = async () => {
   );
 
   const [offersAccount, usdc] = await Promise.all([
-    initializeOffers(admin),
+    initializeZeroAccount(admin, program.account.offers.size),
     initializeUSDC(),
   ]);
 

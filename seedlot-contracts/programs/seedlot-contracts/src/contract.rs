@@ -11,7 +11,8 @@ impl Contract {
         + PUBLIC_KEY_LENGTH // certification_mint
         + PUBLIC_KEY_LENGTH // offers_account
         + PUBLIC_KEY_LENGTH // usdc_mint
-        + PUBLIC_KEY_LENGTH; // usdc_token_account
+        + PUBLIC_KEY_LENGTH // usdc_token_account
+        + PUBLIC_KEY_LENGTH; // lots_account
 }
 
 #[account]
@@ -22,4 +23,5 @@ pub struct Contract {
     pub offers_account: Pubkey,
     pub usdc_mint: Pubkey,
     pub usdc_token_account: Pubkey,
+    pub lots_account: Pubkey,
 }

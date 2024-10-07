@@ -12,4 +12,5 @@ pub enum SeedlotContractsError {
     OrderMintNotFound,
     AdditionalMetadataIllFormed,
     InvalidPrice,
+    LotsFull,
 }
