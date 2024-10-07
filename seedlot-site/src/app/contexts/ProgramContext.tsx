@@ -47,16 +47,19 @@ const CERTIFICATION_MINT_METADATA: MintMetadata = {
   locationVarietyPrice: null,
 };
 
-const ProgramContext = createContext<
-  | {
-      program?: Program<SeedlotContracts>;
-      contract?: Contract;
-      contractAddress?: PublicKey;
-      useInitialize?: (usdcMint?: PublicKey) => Promise<Contract>;
-      useLoadContract?: (contractAddress: PublicKey) => Promise<Contract>;
-    }
-  | undefined
->(undefined);
+const ProgramContext = createContext<{
+  program?: Program<SeedlotContracts>;
+  contract?: Contract;
+  contractAddress?: PublicKey;
+  useInitialize?: (usdcMint?: PublicKey) => Promise<Contract>;
+  useLoadContract?: (contractAddress: PublicKey) => Promise<Contract>;
+}>({
+  program: undefined,
+  contract: undefined,
+  contractAddress: undefined,
+  useInitialize: undefined,
+  useLoadContract: undefined,
+});
 
 export const useProgramContext = () => useContext(ProgramContext);
 
