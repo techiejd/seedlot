@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
 import { WalletProvider } from "./walletProvider";
-import Nav from "@/components/Nav";
+import Nav from "@/app/components/Nav";
 import Link from "next/link";
 
 const geistSans = localFont({

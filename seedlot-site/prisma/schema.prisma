@@ -1,0 +1,27 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  // Uses connection pooling
+  url       = env("POSTGRES_PRISMA_URL")
+  // Uses direct connection, ⚠️ make sure to keep this to `POSTGRES_URL_NON_POOLING`
+  // or you'll have dangling databases from migrations
+  directUrl = env("POSTGRES_URL_NON_POOLING")
+}
+
+model Role {
+  id   Int    @id @default(autoincrement())
+  name String
+  Users User[]
+}
+
+model User {
+  id            Int      @id @default(autoincrement())
+  name          String
+  roleId        Int // Define the foreign key column
+  role          Role     @relation(fields: [roleId], references: [id]) // Define the relation to Role
+  walletAddress String
+  createdAt     DateTime @default(now())
+}

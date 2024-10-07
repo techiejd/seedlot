@@ -1,34 +1,14 @@
 "use client";
 import Link from "next/link";
 import { useEffect } from "react";
-import { WalletAuth } from "@/components/WalletAuth/WalletAuth";
-import { signInWithCustomToken } from "firebase/auth";
-import { auth } from '../config/firebaseConfig';
-import { useWallet } from "@solana/wallet-adapter-react";
+import { WalletAuth } from "./components/WalletAuth/WalletAuth";
+import { useUserDetails } from "./hooks/useUserDetails";
 import Image from "next/image";
 
-import dynamic from "next/dynamic";
-const WalletMultiButton = dynamic(
-  () =>
-    import("@solana/wallet-adapter-react-ui").then(
-      (mod) => mod.WalletMultiButton
-    ),
-  {
-    loading: () => <p>loading...</p>,
-  }
-);
 
 export default function Home() {
-  const { publicKey, connected } = useWallet();
-  
-  useEffect(() => {
-    if (publicKey && connected) {
-      signInWithCustomToken(auth, publicKey.toString())
-      console.log("connected user", auth.currentUser);
-    }
-  }, [connected]);
-
-
+  const { userDetails } = useUserDetails();
+ 
   return (
     <div className="flex min-h-screen">
       <div className="flex flex-col items-center justify-center w-1/2 bg-gray-100">
@@ -39,7 +19,7 @@ export default function Home() {
           height={80}
           className="mb-8"
         />
-        {auth.currentUser && (
+        {userDetails && (
           <Link href="/dashboard">
             <span className="relative inline-flex transition-opacity duration-300 ease-in">
               <button
