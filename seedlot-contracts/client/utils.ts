@@ -57,9 +57,12 @@ export const CERTIFICATION_MINT_METADATA: MintMetadata = {
   symbol: "SEEDLOT-MCERT",
   uri: "https://app.seedlot.io/certification",
   locationVarietyPrice: null,
+  managerForLot: null,
 };
 export const TREES_PER_LOT = new anchor.BN(10);
 export const PRICE_PER_TREE = "1500";
+export const LOT_PRICE_IN_USDC =
+  TREES_PER_LOT.toNumber() * Number(PRICE_PER_TREE) * 10 ** 4;
 
 export const initializeZeroAccount = async (
   admin: web3.Keypair,
@@ -110,9 +113,10 @@ export const initialize = async () => {
     program.programId
   );
 
-  const [offersAccount, usdc] = await Promise.all([
+  const [offersAccount, usdc, lotsAccount] = await Promise.all([
     initializeZeroAccount(admin, program.account.offers.size),
     initializeUSDC(),
+    initializeZeroAccount(admin, program.account.lots.size),
   ]);
 
   const contractUsdcTokenAccount = getAssociatedTokenAddressSync(
@@ -125,6 +129,7 @@ export const initialize = async () => {
     admin: admin.publicKey,
     contract: contractPK,
     offersAccount: offersAccount.publicKey,
+    lotsAccount: lotsAccount.publicKey,
     systemProgram: web3.SystemProgram.programId,
     tokenProgram: TOKEN_2022_PROGRAM_ID,
     certificationMint: certificationMint.publicKey,
@@ -146,6 +151,7 @@ export const initialize = async () => {
     certificationMint,
     admin,
     offersAccount,
+    lotsAccount,
     contractUsdcTokenAccount,
     usdc,
   };

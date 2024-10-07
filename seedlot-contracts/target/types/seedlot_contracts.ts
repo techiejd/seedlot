@@ -5,7 +5,7 @@
  * IDL can be found at `target/idl/seedlot_contracts.json`.
  */
 export type SeedlotContracts = {
-  "address": "5CcnQXqN7sJM1WqGJwvcgnoD51YDnCvXV3HxappzXpsh",
+  "address": "2oBmZcNPKhqV6T3tu2ytnp2cBYhjf6aedu5R9L14Vsyj",
   "metadata": {
     "name": "seedlotContracts",
     "version": "0.1.0",
@@ -914,6 +914,292 @@ export type SeedlotContracts = {
           "type": "u64"
         }
       ]
+    },
+    {
+      "name": "prepareLots",
+      "discriminator": [
+        33,
+        147,
+        76,
+        48,
+        60,
+        149,
+        147,
+        24
+      ],
+      "accounts": [
+        {
+          "name": "user"
+        },
+        {
+          "name": "manager",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "contract",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  116,
+                  114,
+                  97,
+                  99,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "contract.admin",
+                "account": "contract"
+              }
+            ]
+          }
+        },
+        {
+          "name": "offersAccount",
+          "relations": [
+            "contract"
+          ]
+        },
+        {
+          "name": "lotsAccount",
+          "writable": true,
+          "relations": [
+            "contract"
+          ]
+        },
+        {
+          "name": "orderMint",
+          "writable": true
+        },
+        {
+          "name": "userOrderTokenAccount",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "user"
+              },
+              {
+                "kind": "account",
+                "path": "tokenProgram"
+              },
+              {
+                "kind": "account",
+                "path": "orderMint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "lotMint",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "userLotTokenAccount",
+          "writable": true
+        },
+        {
+          "name": "usdcMint",
+          "relations": [
+            "contract"
+          ]
+        },
+        {
+          "name": "contractUsdcTokenAccount",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "contract"
+              },
+              {
+                "kind": "account",
+                "path": "tokenProgramStandard"
+              },
+              {
+                "kind": "account",
+                "path": "usdcMint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "managerUsdcTokenAccount",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "manager"
+              },
+              {
+                "kind": "account",
+                "path": "tokenProgramStandard"
+              },
+              {
+                "kind": "account",
+                "path": "usdcMint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "associatedTokenProgram",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "tokenProgram",
+          "address": "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"
+        },
+        {
+          "name": "tokenProgramStandard",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "systemProgram",
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "rent",
+          "address": "SysvarRent111111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "orderIndex",
+          "type": "u64"
+        },
+        {
+          "name": "orderQuantity",
+          "type": "u64"
+        },
+        {
+          "name": "managerForLot",
+          "type": "string"
+        }
+      ]
     }
   ],
   "accounts": [
@@ -1070,7 +1356,7 @@ export type SeedlotContracts = {
       }
     },
     {
-      "name": "lotMint",
+      "name": "lot",
       "serialization": "bytemuck",
       "repr": {
         "kind": "c"
@@ -1079,8 +1365,12 @@ export type SeedlotContracts = {
         "kind": "struct",
         "fields": [
           {
-            "name": "key",
+            "name": "mint",
             "type": "pubkey"
+          },
+          {
+            "name": "originalPricePerTree",
+            "type": "u64"
           }
         ]
       }
@@ -1108,7 +1398,7 @@ export type SeedlotContracts = {
               "array": [
                 {
                   "defined": {
-                    "name": "lotMint"
+                    "name": "lot"
                   }
                 },
                 10000
@@ -1144,6 +1434,12 @@ export type SeedlotContracts = {
                   3
                 ]
               }
+            }
+          },
+          {
+            "name": "managerForLot",
+            "type": {
+              "option": "string"
             }
           }
         ]

@@ -20,7 +20,7 @@ pub use offers::*;
 pub use orders::*;
 use utils::{init_mint, InitMint, InitMintBumps, MintMetadata};
 
-declare_id!("5CcnQXqN7sJM1WqGJwvcgnoD51YDnCvXV3HxappzXpsh");
+declare_id!("2oBmZcNPKhqV6T3tu2ytnp2cBYhjf6aedu5R9L14Vsyj");
 
 #[program]
 pub mod seedlot_contracts {
@@ -32,11 +32,12 @@ pub mod seedlot_contracts {
         trees_per_lot: u64,
         certification_mint_metadata: MintMetadata,
     ) -> Result<()> {
+        ctx.accounts.contract.admin = ctx.accounts.admin.key(); // must be done before initializing the mint because it relies on context.admin
         init_mint(
             Context::new(
                 ctx.program_id,
                 &mut InitMint {
-                    admin: ctx.accounts.admin.clone(),
+                    payer: ctx.accounts.admin.clone(),
                     contract: ctx.accounts.contract.clone(),
                     mint: ctx.accounts.certification_mint.clone(),
                     rent: ctx.accounts.rent.clone(),
@@ -83,15 +84,14 @@ pub mod seedlot_contracts {
         orders::instructions::place_order(ctx, offer_index, order_quantity)
     }
 
-    /*
-        pub fn prepare_lot(
-            ctx: Context<PrepareLot>,
-            order_index: u64,
-            order_quantity: u64,
-        ) -> Result<()> {
-            lots::instructions::prepare_lot(ctx, order_index, order_quantity)
-        }
-    */
+    pub fn prepare_lots(
+        ctx: Context<PrepareLots>,
+        order_index: u64,
+        order_quantity: u64,
+        manager_for_lot: String,
+    ) -> Result<()> {
+        lots::instructions::prepare_lots(ctx, order_index, order_quantity, manager_for_lot)
+    }
     #[constant]
     pub const TOTAL_OFFERS: u64 = Offers::TOTAL_OFFERS;
 

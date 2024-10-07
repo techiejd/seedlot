@@ -13,7 +13,7 @@ pub mod instructions {
             Context::new(
                 ctx.program_id,
                 &mut InitMint {
-                    admin: ctx.accounts.admin.clone(),
+                    payer: ctx.accounts.admin.clone(),
                     contract: ctx.accounts.contract.clone(),
                     mint: ctx.accounts.order_mint.clone(),
                     rent: ctx.accounts.rent.clone(),
