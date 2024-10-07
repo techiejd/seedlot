@@ -39,7 +39,7 @@ export default function InvestorsPage() {
                   Wallet Address
                 </th>
                 <th scope="col" className="px-6 py-3">
-                  Certified
+                  Number Of Orders
                 </th>
               </tr>
             </thead>
@@ -50,7 +50,7 @@ export default function InvestorsPage() {
                   <td className="px-6 py-4">{investor.walletAddress}</td>
                     <td className="px-6 py-4">
                     <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                      Not Certified
+                      xx
                     </span>
                     </td>
                 </tr>

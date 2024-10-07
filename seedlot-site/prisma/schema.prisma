@@ -24,4 +24,23 @@ model User {
   role          Role     @relation(fields: [roleId], references: [id]) // Define the relation to Role
   walletAddress String
   createdAt     DateTime @default(now())
+
+  UserCertification UserCertification[]
 }
+model Certification {
+  id         Int      @id @default(autoincrement())
+  type       String
+  status     String
+  application Json
+  Users      UserCertification[]
+}
+
+model UserCertification {
+  userId          Int
+  certificationId Int
+  user            User          @relation(fields: [userId], references: [id])
+  certification   Certification @relation(fields: [certificationId], references: [id])
+  
+  @@id([userId, certificationId])
+}
+

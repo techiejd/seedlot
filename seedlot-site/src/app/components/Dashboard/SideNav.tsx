@@ -15,16 +15,6 @@ interface MenuItem {
 
 const commonMenuItems: MenuItem[] = [
   {
-    name: "Place Order",
-    href: "/dashboard/order",
-    icon: "icon here"
-  },
-  {
-    name: "My Orders",
-    href: "/dashboard/my-orders",
-    icon: "icon here"
-  },
-  {
     name: "All Orders",
     href: "/dashboard/orders",
     icon: "icon here"
@@ -40,6 +30,16 @@ const menuItems: { [key in Role]: MenuItem[] } = {
     }
   ],
   investor: [
+    {
+      name: "Place Order",
+      href: "/dashboard/order",
+      icon: "icon here"
+    },
+    {
+      name: "My Orders",
+      href: "/dashboard/my-orders",
+      icon: "icon here"
+    },
     ...commonMenuItems,
     {
       name: "Go Back Home",
@@ -48,12 +48,17 @@ const menuItems: { [key in Role]: MenuItem[] } = {
     }
   ],
   manager: [
-    ...commonMenuItems,
     {
-      name: "Get Certified",
-      href: "/dashboard/certification",
+      name: "Apply Manager",
+      href: "/dashboard/apply-manager",
       icon: "icon here"
     },
+    {
+      name: "Orders Available",
+      href: "/dashboard/orders-available",
+      icon: "icon here"
+    },
+    ...commonMenuItems,
     {
       name: "Go Back Home",
       href: "/",
@@ -63,8 +68,8 @@ const menuItems: { [key in Role]: MenuItem[] } = {
   admin: [
     ...commonMenuItems,
     {
-      name: "Pending Certification",
-      href: "/dashboard/certification",
+      name: "Pending Certifications",
+      href: "/dashboard/certifications",
       icon: "icon here"
     },
     {
