@@ -35,6 +35,7 @@ const useAddOffer = () => {
         offer.variety,
         offer.price.toString(),
       ],
+      managerForLot: null
     };
 
     const orderMint = Keypair.generate();

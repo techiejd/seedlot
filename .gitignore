@@ -2,3 +2,4 @@
 /test-ledger
 # macos
 .DS_Store
+.vercel

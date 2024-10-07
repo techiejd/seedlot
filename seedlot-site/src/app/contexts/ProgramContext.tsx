@@ -45,6 +45,7 @@ const CERTIFICATION_MINT_METADATA: MintMetadata = {
   symbol: "SEEDLOT-MCERT",
   uri: "https://app.seedlot.io/certification",
   locationVarietyPrice: null,
+  managerForLot: null,
 };
 
 const ProgramContext = createContext<{
@@ -81,7 +82,7 @@ export const ProgramProvider: FC<PropsWithChildren> = ({ children }) => {
 
   const program = useMemo(() => {
     if (!provider) return;
-    return new Program(idl as any, provider) as Program<SeedlotContracts>;
+    return new Program(idl as SeedlotContracts, provider) as Program<SeedlotContracts>;
   }, [provider]);
 
   const initialize = useCallback(
@@ -124,7 +125,7 @@ export const ProgramProvider: FC<PropsWithChildren> = ({ children }) => {
         initializeZeroAccountInstruction(program.account.lots.size),
       ]);
 
-      let _usdcMint = usdcMint ?? Keypair.generate().publicKey;
+      const _usdcMint = usdcMint ?? Keypair.generate().publicKey;
       const createUSDCMintInstruction: [TransactionInstruction] | [] = usdcMint
         ? []
         : (() => {

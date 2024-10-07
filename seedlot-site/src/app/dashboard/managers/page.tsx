@@ -44,18 +44,18 @@ export default function ManagersPage() {
             </thead>
             <tbody>
               {managers.map((investor: Manager) => (
-                <tr className="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
-                  <th
-                    scope="row"
-                    className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white"
+                <tr key={investor.walletAddress} className="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
+                  <td
+                  scope="row"
+                  className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white"
                   >
-                    {investor.name}
-                  </th>
+                  {investor.name}
+                  </td>
                   <td className="px-6 py-4">{investor.walletAddress}</td>
                   <td className="px-6 py-4">
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                      Not Certified
-                    </span>
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                    Not Certified
+                  </span>
                   </td>
                 </tr>
               ))}
