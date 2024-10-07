@@ -6,6 +6,7 @@ import {
   MintMetadata,
   PRICE_PER_TREE,
   program,
+  LOT_PRICE_IN_USDC,
 } from "../client/utils";
 import {
   Account,
@@ -57,6 +58,7 @@ describe("Offers", () => {
       symbol: `OFFER`,
       uri: `https://example.com/offer/`,
       locationVarietyPrice: [`location`, `variety`, PRICE_PER_TREE],
+      managerForLot: null,
     };
     const accounts = {
       admin: admin.publicKey,
@@ -133,13 +135,7 @@ describe("Offers", () => {
       userUsdcAccountBefore.amount
     );
     expect(userUsdcAccountAfter.amount).toBe(
-      userUsdcAccountBefore.amount -
-        BigInt(
-          numOrders *
-            TREES_PER_LOT.toNumber() *
-            Number(PRICE_PER_TREE) *
-            10 ** 4
-        )
+      userUsdcAccountBefore.amount - BigInt(numOrders * LOT_PRICE_IN_USDC)
     );
   });
 });

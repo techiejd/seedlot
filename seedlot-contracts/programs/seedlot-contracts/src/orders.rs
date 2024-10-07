@@ -7,14 +7,13 @@ use anchor_spl::token_interface::{Mint, TokenAccount};
 use solana_program::program_option::COption;
 
 pub mod instructions {
-    use crate::utils::{mint_frozen_tokens_to, MintFrozenTokensTo, MintFrozenTokensToBumps};
+    use crate::utils::{
+        get_token_metadata, get_value, mint_frozen_tokens_to, price_cents_2_usdc,
+        price_string_2_cents, MintFrozenTokensTo, MintFrozenTokensToBumps,
+    };
 
     use super::*;
     use anchor_spl::token::{transfer, Transfer};
-    use anchor_spl::token_2022::{mint_to, MintTo};
-    use spl_token_2022::extension::{BaseStateWithExtensions, PodStateWithExtensions};
-    use spl_token_2022::pod::PodMint;
-    use spl_token_metadata_interface::state::TokenMetadata;
 
     pub fn place_order(
         ctx: Context<PlaceOrder>,
@@ -26,30 +25,11 @@ pub mod instructions {
             .load()?
             .verify_order(offer_index, ctx.accounts.offer_mint.key())?;
 
-        /*let mint_with_extension = StateWithExtensions::<Mint>::unpack(
-            &ctx.accounts.offer_mint.to_account_info().data.borrow(),
-        )?;*/
-        //let order_token_metadata = mint_with_extension.get_extension::<TokenMetadata>()?;
-        let order_token_metadata = {
-            let account_info = &ctx.accounts.offer_mint.to_account_info();
-            let buffer = &account_info.data.borrow();
-            let mint = PodStateWithExtensions::<PodMint>::unpack(&buffer)?;
-            mint.get_variable_len_extension::<TokenMetadata>()?
-        };
+        let order_token_metadata = get_token_metadata(&ctx.accounts.offer_mint)?;
         // The price is stored in [2] of order_token_metadata.additional_metadata
-        let price_key_value = order_token_metadata.additional_metadata.get(2).unwrap();
-        require_eq!(
-            price_key_value.0.clone(),
-            "price".to_string(),
-            SeedlotContractsError::AdditionalMetadataIllFormed
-        );
-        let price_in_cents = price_key_value
-            .1
-            .parse::<u64>()
-            .map_err(|_| SeedlotContractsError::InvalidPrice)?; // Price is stored as a "100" = 1 USD
-
-        // USDC has 6 decimals, so we need to convert the price to the correct number of decimal places
-        let price_in_usdc = price_in_cents * 10u64.pow(4);
+        let price = get_value(&order_token_metadata, "price")?;
+        let price_in_cents = price_string_2_cents(&price)?;
+        let price_in_usdc = price_cents_2_usdc(&price_in_cents);
         let total_price = price_in_usdc * order_quantity * ctx.accounts.contract.trees_per_lot;
 
         // Now we need to transfer `price_in_usdc` USDC from the user to the contract
@@ -67,19 +47,14 @@ pub mod instructions {
         )?;
 
         // Now we need to mint_to the offer_mint to the user
-        let mint_to_ctx = MintTo {
-            mint: ctx.accounts.offer_mint.to_account_info(),
-            to: ctx.accounts.user_token_account.to_account_info(),
-            authority: ctx.accounts.contract.to_account_info(),
-        };
         mint_frozen_tokens_to(
             Context::new(
                 ctx.program_id,
                 &mut MintFrozenTokensTo {
                     authority: ctx.accounts.user.to_account_info(),
                     contract: ctx.accounts.contract.clone(),
-                    mint: ctx.accounts.offer_mint.clone(),
-                    to: ctx.accounts.user_token_account.clone(),
+                    mint: ctx.accounts.offer_mint.to_account_info(),
+                    to: ctx.accounts.user_token_account.to_account_info(),
                     associated_token_program: ctx.accounts.associated_token_program.clone(),
                     token_program: ctx.accounts.token_program.clone(),
                 },

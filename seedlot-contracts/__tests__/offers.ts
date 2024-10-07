@@ -21,6 +21,7 @@ describe("Offers", () => {
       symbol: `OFFER`,
       uri: `https://example.com/offer/`,
       locationVarietyPrice: [`location`, `variety`, `price`],
+      managerForLot: null,
     };
     const accounts = {
       admin: admin.publicKey,

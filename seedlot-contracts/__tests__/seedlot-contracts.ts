@@ -95,7 +95,6 @@ describe("initializing", () => {
         expect(contract.certificationMint).toEqual(certificationMint.publicKey);
       });
       it("Sets the certification mint with correct Token settings", async () => {
-        // TODO(techiejd): Move this to a test for makeMint
         const mintInfo = await getMint(
           program.provider.connection,
           contract.certificationMint,
@@ -161,7 +160,7 @@ describe("initializing", () => {
       expect(lots.tail.eqn(0)).toBe(true);
       expect(lots.lots).toHaveLength(TOTAL_LOTS);
       expect(
-        lots.lots.every((l) => l.key.equals(web3.SystemProgram.programId))
+        lots.lots.every((l) => l.mint.equals(web3.SystemProgram.programId))
       ).toBe(true);
     });
   });

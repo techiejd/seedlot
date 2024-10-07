@@ -42,8 +42,8 @@ pub mod instructions {
                 &mut MintFrozenTokensTo {
                     authority: ctx.accounts.manager.to_account_info(),
                     contract: ctx.accounts.contract.clone(),
-                    mint: ctx.accounts.certification_mint.clone(),
-                    to: ctx.accounts.manager_to.clone(),
+                    mint: ctx.accounts.certification_mint.to_account_info(),
+                    to: ctx.accounts.manager_to.to_account_info(),
                     associated_token_program: ctx.accounts.associated_token_program.clone(),
                     token_program: ctx.accounts.token_program.clone(),
                 },
@@ -75,8 +75,8 @@ pub mod instructions {
                 &mut MintFrozenTokensTo {
                     authority: ctx.accounts.manager.to_account_info(),
                     contract: ctx.accounts.contract.clone(),
-                    mint: ctx.accounts.certification_mint.clone(),
-                    to: ctx.accounts.manager_to.clone(),
+                    mint: ctx.accounts.certification_mint.to_account_info(),
+                    to: ctx.accounts.manager_to.to_account_info(),
                     associated_token_program: ctx.accounts.associated_token_program.clone(),
                     token_program: ctx.accounts.token_program.clone(),
                 },
