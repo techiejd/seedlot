@@ -1,5 +1,5 @@
 {
-  "address": "DAyGFg4oHpfa7sWqK2TutD48zbnqrZffF3eRf9cfxwpy",
+  "address": "5AZhBpUbTiZkqM2Z8LVTev8z6awDUGENeBvZYdjWVod9",
   "metadata": {
     "name": "seedlot_contracts",
     "version": "0.1.0",
@@ -948,6 +948,397 @@
       ]
     },
     {
+      "name": "pay_harvest",
+      "discriminator": [
+        217,
+        127,
+        214,
+        240,
+        175,
+        34,
+        182,
+        166
+      ],
+      "accounts": [
+        {
+          "name": "contract",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  116,
+                  114,
+                  97,
+                  99,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "contract.admin",
+                "account": "Contract"
+              }
+            ]
+          }
+        },
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "user",
+          "writable": true
+        },
+        {
+          "name": "manager",
+          "writable": true
+        },
+        {
+          "name": "admin",
+          "writable": true,
+          "relations": [
+            "contract"
+          ]
+        },
+        {
+          "name": "associated_token_program",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "usdc_mint",
+          "writable": true,
+          "relations": [
+            "contract"
+          ]
+        },
+        {
+          "name": "token_program_standard",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "payer_usdc_account",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "payer"
+              },
+              {
+                "kind": "account",
+                "path": "token_program_standard"
+              },
+              {
+                "kind": "account",
+                "path": "usdc_mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "user_usdc_account",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "user"
+              },
+              {
+                "kind": "account",
+                "path": "token_program_standard"
+              },
+              {
+                "kind": "account",
+                "path": "usdc_mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "manager_usdc_account",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "manager"
+              },
+              {
+                "kind": "account",
+                "path": "token_program_standard"
+              },
+              {
+                "kind": "account",
+                "path": "usdc_mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "admin_usdc_account",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "admin"
+              },
+              {
+                "kind": "account",
+                "path": "token_program_standard"
+              },
+              {
+                "kind": "account",
+                "path": "usdc_mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "lots_account",
+          "relations": [
+            "contract"
+          ]
+        },
+        {
+          "name": "lot_mint"
+        },
+        {
+          "name": "token_program",
+          "address": "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"
+        },
+        {
+          "name": "user_lot_token_account",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "user"
+              },
+              {
+                "kind": "account",
+                "path": "token_program"
+              },
+              {
+                "kind": "account",
+                "path": "lot_mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "lot_index",
+          "type": "u64"
+        },
+        {
+          "name": "manager_payment_for_harvest",
+          "type": "u64"
+        },
+        {
+          "name": "profit",
+          "type": "u64"
+        }
+      ]
+    },
+    {
       "name": "place_order",
       "discriminator": [
         51,
@@ -1698,59 +2089,13 @@
   "errors": [
     {
       "code": 6000,
-      "name": "AdminCannotBeCertified"
+      "name": "LotNotFound",
+      "msg": "Lot not found in lots account"
     },
     {
       "code": 6001,
-      "name": "CertificationsMustIncreaseByOneTier"
-    },
-    {
-      "code": 6002,
-      "name": "CannotCertifyAboveTierFour"
-    },
-    {
-      "code": 6003,
-      "name": "NoCertificationTierZero"
-    },
-    {
-      "code": 6004,
-      "name": "ManagerAlreadyDecertified"
-    },
-    {
-      "code": 6005,
-      "name": "OffersFull"
-    },
-    {
-      "code": 6006,
-      "name": "InvalidOfferIndex"
-    },
-    {
-      "code": 6007,
-      "name": "OrderMintNotFound"
-    },
-    {
-      "code": 6008,
-      "name": "AdditionalMetadataIllFormed"
-    },
-    {
-      "code": 6009,
-      "name": "InvalidPrice"
-    },
-    {
-      "code": 6010,
-      "name": "LotsFull"
-    },
-    {
-      "code": 6011,
-      "name": "ManagerNotCertified"
-    },
-    {
-      "code": 6012,
-      "name": "InvalidLotIndex"
-    },
-    {
-      "code": 6013,
-      "name": "LotMintMismatch"
+      "name": "InvalidManager",
+      "msg": "Invalid manager for the lot"
     }
   ],
   "types": [

@@ -16,4 +16,6 @@ pub enum SeedlotContractsError {
     ManagerNotCertified,
     InvalidLotIndex,
     LotMintMismatch,
+    ManagerMismatch,
+    UserMismatch,
 }

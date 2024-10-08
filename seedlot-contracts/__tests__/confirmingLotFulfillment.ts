@@ -257,7 +257,6 @@ describe("confirmingLots", () => {
           managerUsdcTokenAccount
         );
 
-      console.log(managerUsdcTokenAccountBalance.value.uiAmountString);
       expect(managerUsdcTokenAccountBalance.value.amount).toEqual(
         new anchor.BN(LOT_PRICE_IN_USDC * numLotsPrepared).toString()
       );
@@ -310,33 +309,13 @@ describe("confirmingLots", () => {
         offersAccount: offersAccount.publicKey,
         orderMint: orderMint.publicKey,
       };
-      console.log({ confirmAccounts });
-      console.log({ publicKey: program.provider.publicKey });
-      console.log(
-        await program.provider.connection.getBalance(program.provider.publicKey)
-      );
       await airdrop(program.provider.publicKey);
-      console.log(
-        await program.provider.connection.getBalance(program.provider.publicKey)
-      );
       await airdrop(contractPK);
-      console.log(
-        await program.methods
-          .confirmLots(false, new anchor.BN(0), new anchor.BN(0))
-          .accounts(confirmAccounts)
-          .signers([admin])
-          .transaction()
-      );
       await program.methods
         .confirmLots(false, new anchor.BN(0), new anchor.BN(0))
         .accounts(confirmAccounts)
         .signers([admin])
-        .rpc()
-        .catch(async (e) => {
-          if (e instanceof SendTransactionError) {
-            console.log(await e.getLogs(program.provider.connection));
-          }
-        });
+        .rpc();
     }, 15000);
     it("does not transfer any funds to the manager", async () => {
       const managerUsdcTokenAccount = getAssociatedTokenAddressSync(
@@ -352,7 +331,6 @@ describe("confirmingLots", () => {
           managerUsdcTokenAccount
         );
 
-      console.log(managerUsdcTokenAccountBalance.value.uiAmountString);
       expect(managerUsdcTokenAccountBalance.value.amount).toEqual(
         new anchor.BN(LOT_PRICE_IN_USDC * numLotsPrepared * 0.1).toString()
       );

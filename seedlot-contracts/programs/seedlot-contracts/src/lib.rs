@@ -8,6 +8,7 @@ mod certify;
 mod confirm;
 mod contract;
 mod errors;
+mod harvest;
 mod lots;
 mod offers;
 mod orders;
@@ -17,12 +18,13 @@ pub use certify::*;
 pub use confirm::*;
 pub use contract::*;
 pub use errors::*;
+pub use harvest::*;
 pub use lots::*;
 pub use offers::*;
 pub use orders::*;
 use utils::{init_mint, InitMint, InitMintBumps, MintMetadata};
 
-declare_id!("DAyGFg4oHpfa7sWqK2TutD48zbnqrZffF3eRf9cfxwpy");
+declare_id!("5AZhBpUbTiZkqM2Z8LVTev8z6awDUGENeBvZYdjWVod9");
 
 #[program]
 pub mod seedlot_contracts {
@@ -102,6 +104,15 @@ pub mod seedlot_contracts {
         lot_index: u64,
     ) -> Result<()> {
         confirm::instructions::confirm_lots(ctx, confirmed, order_index, lot_index)
+    }
+
+    pub fn pay_harvest(
+        ctx: Context<PayHarvest>,
+        lot_index: u64,
+        manager_payment_for_harvest: u64,
+        profit: u64,
+    ) -> Result<()> {
+        harvest::instructions::pay_harvest(ctx, lot_index, manager_payment_for_harvest, profit)
     }
 
     #[constant]
