@@ -100,22 +100,28 @@ const ProgramContext = createContext<{
 
 export const useProgramContext = () => useContext(ProgramContext);
 
-export const ProgramProvider: FC<PropsWithChildren> = ({ children }) => {
+export const ProgramProvider: FC<
+  PropsWithChildren<{ contractPK: string | undefined }>
+> = ({ children, contractPK }) => {
   const anchorWallet = useAnchorWallet();
-
   const [_contractAddress, setContractAddress] = useState<
     PublicKey | undefined
-  >(undefined);
+  >(contractPK ? new PublicKey(contractPK) : undefined);
   const [_contract, setContract] = useState<Contract | undefined>(undefined);
   const [lots, setLots] = useState<Lots | undefined>(undefined);
   const [offers, setOffers] = useState<Offers | undefined>(undefined);
 
-  const provider = useMemo(() => {
+  const [provider, setProvider] = useState<AnchorProvider | undefined>(
+    undefined
+  );
+
+  useEffect(() => {
+    // TODO: FIGURE OUT WHY THIS ANCHOR WALLET IS NOT LOADING
+    console.log("Anchor Wallet", anchorWallet);
     if (!anchorWallet) return;
     const connection = new Connection("https://api.devnet.solana.com");
     const p = new AnchorProvider(connection, anchorWallet);
     setProvider(p);
-    return p;
   }, [anchorWallet]);
 
   const program = useMemo(() => {
@@ -140,6 +146,17 @@ export const ProgramProvider: FC<PropsWithChildren> = ({ children }) => {
     },
     [program, _contractAddress]
   );
+
+  useEffect(() => {
+    // TODO: FIGURE OUT WHY THE LOAD CONTRACT IS NOT WORKING
+    console.log(provider, program, contractPK);
+    if (!provider) return;
+    if (!program) return;
+    if (!contractPK) return;
+    console.log("Loading contract", contractPK);
+    console.log("PublicKey contract", new PublicKey(contractPK));
+    loadContract(new PublicKey(contractPK));
+  }, [contractPK, loadContract, program, provider]);
 
   const initialize = useCallback(
     // If no usdcMint is provided, the program will create a new mint, meant for development.

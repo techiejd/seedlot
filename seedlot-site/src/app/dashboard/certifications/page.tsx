@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useMemo, useEffect } from "react";
 import { User } from "@/app/models/User";
-import { useCertify } from "@/app/hooks/useCertify";
+import { useCertify, useManagerCertificationTier } from "@/app/hooks/useCertify";
 import { PublicKey } from "@solana/web3.js";
 
 // Add deny button
@@ -16,7 +16,10 @@ type Certificate = {
 };
 
 const ApproveButton = ({ managerPK }: { managerPK: string }) => {
-  const certify = useCertify(new PublicKey(managerPK));
+
+  console.log("managerPK", managerPK);
+  
+  const certify = useCertify(new PublicKey(managerPK))
 
   return (
     <button
@@ -28,8 +31,24 @@ const ApproveButton = ({ managerPK }: { managerPK: string }) => {
   );
 };
 
+const StatusBadge = ({ managerPK }: { managerPK: string }) => {
+  const managerCertificationTier = useManagerCertificationTier(new PublicKey(managerPK));
+  return (
+    <span
+      className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+        managerCertificationTier?.undefined || managerCertificationTier == undefined
+          ? "bg-yellow-100 text-yellow-800"
+          : "bg-green-100 text-green-800"
+      }`}
+    >
+      {managerCertificationTier?.undefined || managerCertificationTier == undefined ? "Pending" : Object.keys(managerCertificationTier)[0]}
+    </span>
+  );
+}
+
 export default function PendingCertificationsPage() {
   const [certifications, setCertifications] = useState<Certificate[]>([]);
+ 
 
   useEffect(() => {
     const fetchCerts = async () => {
@@ -100,15 +119,9 @@ export default function PendingCertificationsPage() {
                       {certification.Users[0].user.name}
                     </td>
                     <td className="px-6 py-4">
-                      <span
-                        className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                          certification.status === "pending"
-                            ? "bg-yellow-100 text-yellow-800"
-                            : "bg-green-100 text-green-800"
-                        }`}
-                      >
-                        {certification.status}
-                      </span>
+                      <StatusBadge
+                        managerPK={certification.Users[0].user.walletAddress}
+                      />
                     </td>
                     <td
                       scope="row"
@@ -143,3 +156,7 @@ export default function PendingCertificationsPage() {
     </div>
   );
 }
+function useAta() {
+  throw new Error("Function not implemented.");
+}
+

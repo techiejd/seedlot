@@ -6,6 +6,7 @@ import Nav from "@/app/components/Nav";
 import Link from "next/link";
 import { ProgramProvider } from "./contexts/ProgramContext";
 import { UserProvider } from "./contexts/UserContext";
+import getContractPK from "./models/Contract";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -24,11 +25,13 @@ export const metadata: Metadata = {
     "From Soil to Sip: Take Part in The Coffee Supply Chain with tree investments recorded on the blockchain",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const contract = await getContractPK();
+
   return (
     <html lang="en">
       <body
@@ -36,7 +39,7 @@ export default function RootLayout({
       >
         <WalletProvider>
           <UserProvider>
-            <ProgramProvider>{children}</ProgramProvider>
+            <ProgramProvider contractPK={contract?.contractPK}>{children}</ProgramProvider>
           </UserProvider>
         </WalletProvider>
       </body>
