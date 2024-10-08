@@ -123,21 +123,24 @@ const SideNav = () => {
       </Link>
       <ul className="list-none p-0">
         {items.map((item) => (
-          
-            <li key={item.name} className={`mb-2 h-8 ${item.href === "/" ? "mt-8 rounded bg-green-800" : ""}`}>
-            <Link
-              href={item.href}
-              className={`flex items-center p-2 rounded ${
-              pathname === item.href ? "bg-gray-700" : item.href === "/" ? "bg-green-800" : "bg-transparent"
-              } text-gray-300 no-underline`}
-            >
-              {/* <span className="mr-1 w-[20px]">{item.icon}</span> */}
-              {item.name}
-            </Link>
-            </li>
-
+          <li key={item.name} className={`mb-2 h-8 ${item.href === "/" ? "mt-8 rounded bg-green-800" : ""}`}>
+        <Link
+          href={item.href}
+          className={`flex items-center p-2 rounded ${
+            pathname === item.href ? "bg-gray-700" : item.href === "/" ? "bg-green-800" : "bg-transparent"
+          } text-gray-300 no-underline`}
+        >
+          {/* <span className="mr-1 w-[20px]">{item.icon}</span> */}
+          {item.name}
+        </Link>
+          </li>
         ))}
       </ul>
+      {userDetails && (
+        <div className="absolute bottom-0 left-0 w-64 bg-gray-800 text-gray-300 p-2 text-center">
+          Role: <b>{userDetails.role.name}</b>
+        </div>
+      )}
     </div>
   );
 };
