@@ -88,14 +88,13 @@ const usePrepareLots = () => {
         wallet.publicKey.toBase58()
       )
       .accounts(prepareLotsAccounts)
-      .signers([lotMint])
       .preInstructions([
         ComputeBudgetProgram.setComputeUnitLimit({
           units: 400_000,
         }),
       ])
       .instruction();
-    return await signSendAndConfirmIxs([ix]);
+    return await signSendAndConfirmIxs([ix], [lotMint]);
   };
 
   return prepareLots;

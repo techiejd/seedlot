@@ -7,6 +7,7 @@ import React, {
   useMemo,
   useCallback,
   useState,
+  useEffect,
 } from "react";
 import {
   Program,
@@ -24,10 +25,10 @@ import {
   Connection,
   Keypair,
   PublicKey,
-  SendTransactionError,
   SystemProgram,
   TransactionInstruction,
   VersionedTransaction,
+  Signer,
 } from "@solana/web3.js";
 import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
@@ -37,11 +38,14 @@ import {
   TOKEN_2022_PROGRAM_ID,
   TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";
-import { tree } from "next/dist/build/templates/app-page";
 
 export type Contract = IdlAccounts<SeedlotContracts>["contract"];
 export type CertificationTier = IdlTypes<SeedlotContracts>["certificationTier"];
 export type MintMetadata = IdlTypes<SeedlotContracts>["mintMetadata"];
+export type Lots = IdlTypes<SeedlotContracts>["lots"];
+export type Lot = IdlTypes<SeedlotContracts>["lot"];
+export type Offers = IdlTypes<SeedlotContracts>["offers"];
+export type Offer = IdlTypes<SeedlotContracts>["offer"];
 export const TREES_PER_LOT = new BN(100);
 const CERTIFICATION_MINT_METADATA: MintMetadata = {
   name: "Seedlot Manager Certification",
@@ -58,7 +62,8 @@ export const useSignSendAndConfirmIxs = () => {
     return undefined;
 
   const signSendAndConfirmIxs = async (
-    instructions: TransactionInstruction[]
+    instructions: TransactionInstruction[],
+    signers: Signer[] = []
   ) => {
     const message = new web3.TransactionMessage({
       payerKey: anchorWallet.publicKey!,
@@ -67,9 +72,9 @@ export const useSignSendAndConfirmIxs = () => {
       instructions,
     }).compileToV0Message();
 
-    const tx = new VersionedTransaction(message);
-    const signedTx = await anchorWallet.signTransaction(tx);
-    return await program.provider.sendAndConfirm!(signedTx);
+    const tx = new VersionedTransaction(message).sign(signers);
+    const walletSignedTx = await anchorWallet.signTransaction(tx);
+    return await program.provider.sendAndConfirm!(walletSignedTx);
   };
 
   return signSendAndConfirmIxs;
@@ -79,6 +84,8 @@ const ProgramContext = createContext<{
   program?: Program<SeedlotContracts>;
   contract?: Contract;
   contractAddress?: PublicKey;
+  lots?: Lots;
+  offers?: Offers;
   useInitialize?: (usdcMint?: PublicKey) => Promise<Contract>;
   useLoadContract?: (contractAddress: PublicKey) => Promise<Contract>;
 }>({
@@ -87,6 +94,8 @@ const ProgramContext = createContext<{
   contractAddress: undefined,
   useInitialize: undefined,
   useLoadContract: undefined,
+  lots: undefined,
+  offers: undefined,
 });
 
 export const useProgramContext = () => useContext(ProgramContext);
@@ -98,6 +107,8 @@ export const ProgramProvider: FC<PropsWithChildren> = ({ children }) => {
     PublicKey | undefined
   >(undefined);
   const [_contract, setContract] = useState<Contract | undefined>(undefined);
+  const [lots, setLots] = useState<Lots | undefined>(undefined);
+  const [offers, setOffers] = useState<Offers | undefined>(undefined);
 
   const provider = useMemo(() => {
     if (!anchorWallet) return;
@@ -252,16 +263,39 @@ export const ProgramProvider: FC<PropsWithChildren> = ({ children }) => {
       console.log("Offers Account", offersAccount.publicKey.toBase58());
       console.log("Lots Account", lotsAccount.publicKey.toBase58());
 
-      await signSendAndConfirmIxs([
-        createOffersAccountInstruction,
-        createLotsAccountInstruction,
-        ...createUSDCMintInstruction,
-        initializeInstruction,
-      ]);
+      await signSendAndConfirmIxs(
+        [
+          createOffersAccountInstruction,
+          createLotsAccountInstruction,
+          ...createUSDCMintInstruction,
+          initializeInstruction,
+        ],
+        [offersAccount, lotsAccount, _usdcMintKeyPair, certificationMint]
+      );
       return loadContract(contractPK);
     },
     [program, anchorWallet, signSendAndConfirmIxs, loadContract]
   );
+
+  useEffect(() => {
+    if (!_contract || !program) return;
+    const loadLots = async () => {
+      const lots = await program.account.lots.fetch(_contract.lotsAccount);
+      setLots(lots);
+    };
+    loadLots();
+  }, [_contract, program]);
+
+  useEffect(() => {
+    if (!_contract || !program) return;
+    const loadOffers = async () => {
+      const offers = await program.account.offers.fetch(
+        _contract.offersAccount
+      );
+      setOffers(offers);
+    };
+    loadOffers();
+  }, [_contract, program]);
 
   return (
     <ProgramContext.Provider
@@ -271,6 +305,8 @@ export const ProgramProvider: FC<PropsWithChildren> = ({ children }) => {
         contractAddress: _contractAddress,
         useInitialize: initialize,
         useLoadContract: loadContract,
+        lots,
+        offers,
       }}
     >
       {children}

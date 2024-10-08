@@ -59,10 +59,9 @@ const useAddOffer = () => {
     const ix = await program.methods
       .addOffer(orderMintMetadata)
       .accounts(accounts)
-      .signers([orderMint])
       .instruction();
 
-    return signSendAndConfirmIxs([ix]);
+    return signSendAndConfirmIxs([ix], [orderMint]);
   };
 
   return addOffer;
