@@ -44,3 +44,7 @@ model UserCertification {
   @@id([userId, certificationId])
 }
 
+model ProgramContract {
+  contractPK     String @id
+  tokenProgramId String
+}
