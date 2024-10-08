@@ -1,10 +1,10 @@
 "use client";
 import React from "react";
-import { useUserDetails } from "../hooks/useUserDetails";
-
+import { useUserContext } from "@/app/contexts/UserContext";
 
 export default function Dashboard() {
-  const { userDetails } = useUserDetails();
+  const { userDetails } = useUserContext();
+  
   if (!userDetails) {
     return (
       <div className="flex justify-center items-center h-screen">

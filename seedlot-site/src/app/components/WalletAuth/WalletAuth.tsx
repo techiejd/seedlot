@@ -1,8 +1,13 @@
 import dynamic from "next/dynamic";
+import { useEffect } from "react";
 import Image from "next/image";
-
+import { useWallet } from "@solana/wallet-adapter-react";
+import { connected } from "process";
+import { useUserContext } from "@/app/contexts/UserContext";
+import { getUserByWalletAddress } from "@/app/repository/user/getUser";
 
 export const WalletAuth = () => {
+  
 
   const WalletMultiButton = dynamic(
     () =>
@@ -10,7 +15,14 @@ export const WalletAuth = () => {
         (mod) => mod.WalletMultiButton
       ),
     {
-      loading: () => <Image src="/images/loading_spinner.svg" alt="Loading..." width={24} height={24} />,
+      loading: () => (
+        <Image
+          src="/images/loading_spinner.svg"
+          alt="Loading..."
+          width={24}
+          height={24}
+        />
+      ),
       ssr: false, // Disable server-side rendering to ensure this only loads on the client
     }
   );

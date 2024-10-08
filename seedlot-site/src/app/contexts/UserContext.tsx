@@ -1,6 +1,14 @@
 "use client";
-import { createContext, useContext, useState, ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useState,
+  ReactNode,
+  useEffect,
+} from "react";
 import { User } from "@/app/models/User";
+import { useWallet } from "@solana/wallet-adapter-react";
+import { getUserByWalletAddress } from "../repository/user/getUser";
 
 type UserContextType = {
   userDetails: User | null;
@@ -14,6 +22,21 @@ const UserContext = createContext<UserContextType | undefined>(undefined);
 export const UserProvider = ({ children }: { children: ReactNode }) => {
   const [userDetails, setUserDetails] = useState<User | null>(null);
   const [userDetailsNotFound, setUserDetailsNotFound] = useState(false);
+  const { publicKey } = useWallet();
+
+  useEffect(() => {
+    if (!publicKey) {
+      setUserDetails(null);
+      return
+    }
+    getUserByWalletAddress(publicKey.toString()).then((user) => {
+      if (!user) {
+        setUserDetailsNotFound(true);
+      } else {
+        setUserDetails(user);
+      }
+    });
+  }, [publicKey]);
 
   return (
     <UserContext.Provider

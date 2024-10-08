@@ -3,14 +3,14 @@ import Link from "next/link";
 import { WalletAuth } from "./components/WalletAuth/WalletAuth";
 import { useEffect } from "react";
 import { useWallet } from "@solana/wallet-adapter-react";
-import { useUserDetails } from "./hooks/useUserDetails";
+import { useUserContext } from "@/app/contexts/UserContext";
 import Image from "next/image";
 import { RegisterModal } from "./components/Auth/RegisterModal";
 
 
 export default function Home() {
-  const { userDetails, userDetailsNotFound } = useUserDetails();
   const { publicKey } = useWallet();
+  const { userDetails, userDetailsNotFound } = useUserContext();
 
   return (
     <div className="flex min-h-screen">

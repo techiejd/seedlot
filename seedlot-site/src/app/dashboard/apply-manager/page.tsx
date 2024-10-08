@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import Image from "next/image";
-import { useUserDetails } from "@/app/hooks/useUserDetails";
+import { useUserContext } from "@/app/contexts/UserContext";
 
 export default function ApplyManagerPage() {
   const [growingDuration, setGrowingDuration] = useState("");
@@ -10,7 +10,7 @@ export default function ApplyManagerPage() {
   const [altitude, setAltitude] = useState("");
   const [treeLocation, setTreeLocation] = useState("");
   const [farmLocation, setFarmLocation] = useState("");
-  const { userDetails } = useUserDetails();
+  const { userDetails } = useUserContext();
   const [certificationInProgress, setCertificationInProgress] = useState(false);
   const [loading, setLoading] = useState(true);
   const [certificationStatus, setCertificationStatus] = useState("");

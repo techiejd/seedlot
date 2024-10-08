@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { useUserDetails } from "@/app/hooks/useUserDetails";
+import { useUserContext } from "@/app/contexts/UserContext";
 
 type Role = "investor" | "manager" | "admin" | "none";
 
@@ -97,7 +97,7 @@ interface UserDetails {
 }
 
 const SideNav = () => {
-  const { userDetails } = useUserDetails() as { userDetails: UserDetails | null };
+  const { userDetails } = useUserContext() as { userDetails: UserDetails | null };
   const pathname = usePathname();
   const [items, setItems] = useState<MenuItem[]>([]);
 

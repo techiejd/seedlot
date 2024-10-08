@@ -2,14 +2,14 @@
 import React from "react";
 import { useState } from "react";
 import { register } from "@/app/repository/user/registerUser";
-import { useUserDetails } from "@/app/hooks/useUserDetails";
+import { useUserContext } from "@/app/contexts/UserContext";
 import Image from "next/image";
 
 export const RegisterModal = ({ walletAddress }: { walletAddress: string }) => {
   const [name, setName] = useState("");
   const [roleId, setRoleId] = useState(1);
   const [registering, setRegistering] = useState(false);
-  const { setUserDetails, setUserDetailsNotFound } = useUserDetails();
+  const { setUserDetails, setUserDetailsNotFound } = useUserContext();
 
   const handleRegister = async () => {
     setRegistering(true);

@@ -34,11 +34,11 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <UserProvider>
-          <WalletProvider>
+        <WalletProvider>
+          <UserProvider>
             <ProgramProvider>{children}</ProgramProvider>
-          </WalletProvider>
-        </UserProvider>
+          </UserProvider>
+        </WalletProvider>
       </body>
     </html>
   );

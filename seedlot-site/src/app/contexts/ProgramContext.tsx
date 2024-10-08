@@ -27,6 +27,7 @@ import {
   SystemProgram,
   Transaction,
   TransactionInstruction,
+  VersionedTransaction,
 } from "@solana/web3.js";
 import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
@@ -35,6 +36,7 @@ import {
   TOKEN_2022_PROGRAM_ID,
   TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";
+import { tree } from "next/dist/build/templates/app-page";
 
 export type Contract = IdlAccounts<SeedlotContracts>["contract"];
 export type CertificationTier = IdlTypes<SeedlotContracts>["certificationTier"];
@@ -67,7 +69,7 @@ export const useProgramContext = () => useContext(ProgramContext);
 export const ProgramProvider: FC<PropsWithChildren> = ({ children }) => {
   const wallet = useWallet();
   const anchorWallet = useAnchorWallet();
-  const connection = new Connection("https://api.devnet.solana.com");
+
   const [_contractAddress, setContractAddress] = useState<
     PublicKey | undefined
   >(undefined);
@@ -75,14 +77,18 @@ export const ProgramProvider: FC<PropsWithChildren> = ({ children }) => {
 
   const provider = useMemo(() => {
     if (!anchorWallet) return;
+    const connection = new Connection("https://api.devnet.solana.com");
     const p = new AnchorProvider(connection, anchorWallet);
     setProvider(p);
     return p;
-  }, [connection, anchorWallet]);
+  }, [anchorWallet]);
 
   const program = useMemo(() => {
     if (!provider) return;
-    return new Program(idl as SeedlotContracts, provider) as Program<SeedlotContracts>;
+    return new Program(
+      idl as SeedlotContracts,
+      provider
+    ) as Program<SeedlotContracts>;
   }, [provider]);
 
   const initialize = useCallback(
@@ -129,11 +135,13 @@ export const ProgramProvider: FC<PropsWithChildren> = ({ children }) => {
       const createUSDCMintInstruction: [TransactionInstruction] | [] = usdcMint
         ? []
         : (() => {
+            console.log("are you alive? ", wallet.publicKey);
             const mint = createInitializeMintInstruction(
               _usdcMint,
               6,
               wallet.publicKey!,
-              wallet.publicKey!
+              wallet.publicKey!,
+              TOKEN_PROGRAM_ID
             );
             return [mint];
           })();
@@ -152,7 +160,7 @@ export const ProgramProvider: FC<PropsWithChildren> = ({ children }) => {
 
       /**
        * Accounts object containing various public keys and program IDs used in the application.
-       * 
+       *
        * @property {PublicKey} admin - The public key of the admin's wallet.
        * @property {PublicKey} contract - The public key of the contract.
        * @property {PublicKey} offersAccount - The public key of the offers account.
@@ -179,37 +187,58 @@ export const ProgramProvider: FC<PropsWithChildren> = ({ children }) => {
         tokenProgramStandard: TOKEN_PROGRAM_ID,
       };
 
-      const initializeTxPromise = program.methods
-        .initialize(TREES_PER_LOT, CERTIFICATION_MINT_METADATA)
-        .accounts(accounts)
-        .signers([certificationMint])
-        .transaction();
-
-      const sendPrepareAccountsTxPromise = wallet.sendTransaction(
-        new Transaction().add(
+      const message = new web3.TransactionMessage({
+        payerKey: wallet.publicKey!,
+        recentBlockhash: (await program.provider.connection.getLatestBlockhash()).blockhash,
+        instructions: [
           createOffersAccountInstruction,
           createLotsAccountInstruction,
           ...createUSDCMintInstruction
-        ),
-        program.provider.connection
-      );
+        ],
+      }).compileToV0Message();
+      const tx = new VersionedTransaction(message);
+      const walletSignedTx = await anchorWallet?.signTransaction(tx);
+      walletSignedTx?.sign([offersAccount, lotsAccount]);
 
-      const [initializeTx] = await Promise.all([
-        initializeTxPromise,
-        confirmTx(
-          await sendPrepareAccountsTxPromise,
-          program.provider.connection
-        ),
-      ]);
+      if(!walletSignedTx) throw new Error("walletSignedTx is undefined");
 
-      const txHash = await wallet.sendTransaction(
-        initializeTx,
-        program.provider.connection
-      );
-      await confirmTx(txHash, program.provider.connection);
+
+      const confirmTransaction = await program.provider.sendAndConfirm!(walletSignedTx);
+      const initializedTransaction = await program.methods.initialize(TREES_PER_LOT, CERTIFICATION_MINT_METADATA).accounts(accounts).transaction();
+      const initializedTransactionHash = await anchorWallet?.signTransaction(initializedTransaction)
+      const returned = initializedTransactionHash?.sign(certificationMint);
+      await program.provider.sendAndConfirm!(returned!);
       return loadContract(contractPK);
+
+
+
+      // const sendPrepareAccountsTxPromise = await anchorWallet?.signTransaction(
+      //   tx
+      //   // program.provider.connection
+      // );
+      // console.log({sendPrepareAccountsTxPromise})
+      // console.log(sendPrepareAccountsTxPromise?.signatures.map((s) => s.publicKey.toBase58()));
+
+      // if (!sendPrepareAccountsTxPromise)
+      //   throw new Error("sendPrepareAccountsTxPromise is undefined");
+
+
+      // const [initializeTx] = await Promise.all([
+      //   initializeTxPromise,
+      //   confirmTx(
+      //     await sendPrepareAccountsTxPromise,
+      //     program.provider.connection
+      //   ),
+      // ]);
+
+      // const txHash = await wallet.sendTransaction(
+      //   initializeTx,
+      //   program.provider.connection
+      // );
+      // await confirmTx(txHash, program.provider.connection);
+      // return loadContract(contractPK);
     },
-    [program, wallet]
+    [program, wallet, anchorWallet]
   );
 
   const loadContract = useCallback(
