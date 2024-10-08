@@ -14,7 +14,7 @@ pub mod instructions {
         burn_frozen_tokens_from, mint_frozen_tokens_to, price_cents_2_usdc, BurnFrozenTokensFrom,
         BurnFrozenTokensFromBumps, MintFrozenTokensTo, MintFrozenTokensToBumps,
     };
-    use crate::{Certify, CertifyBumps};
+    use crate::{CertificationTier, Certify, CertifyBumps};
 
     use super::*;
     use anchor_spl::token::{transfer, Transfer};
@@ -95,35 +95,49 @@ pub mod instructions {
             ))?;
         } else {
             // Decertify the manager
-            decertify(Context::new(
-                ctx.program_id,
-                &mut Certify {
-                    admin: ctx.accounts.admin.clone(),
-                    contract: ctx.accounts.contract.clone(),
-                    token_program: ctx.accounts.token_program.clone(),
-                    manager_to: ctx.accounts.manager_certification_token_account.clone(),
-                    associated_token_program: ctx.accounts.associated_token_program.clone(),
-                    system_program: ctx.accounts.system_program.clone(),
-                    manager: ctx.accounts.manager.clone(),
-                    certification_mint: ctx.accounts.certification_mint.clone(),
-                },
-                &[],
-                CertifyBumps {
-                    contract: ctx.bumps.contract,
-                },
-            ))?;
+            let decertified_tier_as_u64 = CertificationTier::Decertified as u64;
+            require_neq!(
+                ctx.accounts.manager_certification_token_account.amount,
+                decertified_tier_as_u64,
+                SeedlotContractsError::ManagerAlreadyDecertified
+            );
+            let current_number_of_certification_tokens =
+                ctx.accounts.manager_certification_token_account.amount;
+            let number_of_tokens_needed_to_decertify =
+                decertified_tier_as_u64 - current_number_of_certification_tokens;
+
+            mint_frozen_tokens_to(
+                Context::new(
+                    ctx.program_id,
+                    &mut MintFrozenTokensTo {
+                        authority: ctx.accounts.manager.to_account_info(),
+                        contract: *ctx.accounts.contract.clone(),
+                        mint: ctx.accounts.certification_mint.to_account_info(),
+                        to: ctx
+                            .accounts
+                            .manager_certification_token_account
+                            .to_account_info(),
+                        associated_token_program: ctx.accounts.associated_token_program.clone(),
+                        token_program: ctx.accounts.token_program.clone(),
+                    },
+                    &[],
+                    MintFrozenTokensToBumps {
+                        contract: ctx.bumps.contract,
+                    },
+                ),
+                number_of_tokens_needed_to_decertify,
+            )?;
 
             // Return 10% to the contract's USDC account
             let return_manager_fee = total_price / 10; // 10% of the total price
             transfer(
-                CpiContext::new_with_signer(
+                CpiContext::new(
                     ctx.accounts.token_program_standard.to_account_info(),
                     Transfer {
-                        from: ctx.accounts.contract_usdc_token_account.to_account_info(),
-                        to: ctx.accounts.manager_usdc_token_account.to_account_info(),
-                        authority: ctx.accounts.contract.to_account_info(),
+                        from: ctx.accounts.admin_usdc_token_account.to_account_info(),
+                        to: ctx.accounts.contract_usdc_token_account.to_account_info(),
+                        authority: ctx.accounts.admin.to_account_info(),
                     },
-                    &[],
                 ),
                 return_manager_fee,
             )?;
@@ -134,7 +148,7 @@ pub mod instructions {
                     ctx.program_id,
                     &mut MintFrozenTokensTo {
                         authority: ctx.accounts.user.clone(),
-                        contract: ctx.accounts.contract.clone(),
+                        contract: *ctx.accounts.contract.clone(),
                         mint: ctx.accounts.order_mint.to_account_info(),
                         to: ctx.accounts.user_order_token_account.to_account_info(),
                         associated_token_program: ctx.accounts.associated_token_program.clone(),
@@ -145,7 +159,7 @@ pub mod instructions {
                         contract: ctx.bumps.contract,
                     },
                 ),
-                ctx.accounts.contract.trees_per_lot,
+                prepared_lots,
             )?;
 
             // Burn lot tokens
@@ -154,7 +168,7 @@ pub mod instructions {
                     ctx.program_id,
                     &mut BurnFrozenTokensFrom {
                         authority: ctx.accounts.user.clone(),
-                        contract: ctx.accounts.contract.clone(),
+                        contract: *ctx.accounts.contract.clone(),
                         mint: ctx.accounts.lot_mint.clone(),
                         from: ctx.accounts.user_lot_token_account.clone(),
                         associated_token_program: ctx.accounts.associated_token_program.clone(),
@@ -165,7 +179,7 @@ pub mod instructions {
                         contract: ctx.bumps.contract,
                     },
                 ),
-                ctx.accounts.contract.trees_per_lot,
+                prepared_lots,
             )?;
 
             // Close lot mint
@@ -195,6 +209,13 @@ pub struct ConfirmLots<'info> {
     pub admin: Signer<'info>,
     #[account(
         mut,
+        associated_token::mint = usdc_mint,
+        associated_token::authority = admin,
+        associated_token::token_program = token_program_standard,
+    )]
+    pub admin_usdc_token_account: Box<InterfaceAccount<'info, TokenAccount>>,
+    #[account(
+        mut,
         seeds = [b"contract", contract.admin.as_ref()],
         bump,
         has_one = admin,
@@ -203,7 +224,7 @@ pub struct ConfirmLots<'info> {
         has_one = usdc_mint,
         has_one = certification_mint,
     )]
-    pub contract: Account<'info, Contract>,
+    pub contract: Box<Account<'info, Contract>>,
     /// CHECK: This account is used for getting the associated token addresses only.
     pub manager: SystemAccount<'info>,
     #[account(mut,
@@ -211,29 +232,29 @@ pub struct ConfirmLots<'info> {
         mint::token_program = token_program,
         mint::freeze_authority = contract,
     )]
-    pub certification_mint: InterfaceAccount<'info, Mint>,
+    pub certification_mint: Box<InterfaceAccount<'info, Mint>>,
     #[account(
         mut,
         associated_token::mint = certification_mint,
         associated_token::authority = manager,
         associated_token::token_program = token_program,
     )]
-    pub manager_certification_token_account: InterfaceAccount<'info, TokenAccount>,
-    pub usdc_mint: InterfaceAccount<'info, Mint>,
+    pub manager_certification_token_account: Box<InterfaceAccount<'info, TokenAccount>>,
+    pub usdc_mint: Box<InterfaceAccount<'info, Mint>>,
     #[account(
         mut,
         associated_token::mint = usdc_mint,
         associated_token::authority = contract,
         associated_token::token_program = token_program_standard,
     )]
-    pub contract_usdc_token_account: InterfaceAccount<'info, TokenAccount>,
+    pub contract_usdc_token_account: Box<InterfaceAccount<'info, TokenAccount>>,
     #[account(
         mut,
         associated_token::mint = usdc_mint,
         associated_token::authority = manager,
         associated_token::token_program = token_program_standard,
     )]
-    pub manager_usdc_token_account: InterfaceAccount<'info, TokenAccount>,
+    pub manager_usdc_token_account: Box<InterfaceAccount<'info, TokenAccount>>,
     pub token_program_standard: Program<'info, Token>,
     pub associated_token_program: Program<'info, AssociatedToken>,
     #[account(mut)]

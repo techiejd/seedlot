@@ -5,7 +5,7 @@ seeds = false
 skip-lint = false
 
 [programs.localnet]
-seedlot_contracts = "2zfu7HKSjPFJpi8Ga5EUdPXEQDoR3RV25xUuyFViqx5R"
+seedlot_contracts = "5AZhBpUbTiZkqM2Z8LVTev8z6awDUGENeBvZYdjWVod9"
 
 [registry]
 url = "https://api.apr.dev"
