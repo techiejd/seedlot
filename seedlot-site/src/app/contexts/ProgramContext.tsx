@@ -69,7 +69,6 @@ const ProgramContext = createContext<{
 export const useProgramContext = () => useContext(ProgramContext);
 
 export const ProgramProvider: FC<PropsWithChildren> = ({ children }) => {
-  const wallet = useWallet();
   const anchorWallet = useAnchorWallet();
 
   const [_contractAddress, setContractAddress] = useState<
@@ -93,6 +92,19 @@ export const ProgramProvider: FC<PropsWithChildren> = ({ children }) => {
     ) as Program<SeedlotContracts>;
   }, [provider]);
 
+  const loadContract = useCallback(
+    async (contractAddress: PublicKey) => {
+      if (!program) throw new Error("Program not initialized");
+      if (contractAddress != _contractAddress) {
+        setContractAddress(contractAddress);
+      }
+      const contract = await program.account.contract.fetch(contractAddress);
+      setContract(contract);
+      return contract;
+    },
+    [program, _contractAddress]
+  );
+
   const initialize = useCallback(
     // If no usdcMint is provided, the program will create a new mint, meant for development.
     // It will set the admin as the usdcMint's authority.
@@ -101,8 +113,8 @@ export const ProgramProvider: FC<PropsWithChildren> = ({ children }) => {
     async (usdcMint?: PublicKey) => {
       // TODO(jbrown8181): Admin guard this if you want
       if (!program) throw new Error("Program not initialized");
-      if (!wallet) throw new Error("Wallet not found");
-      if (!wallet.publicKey) throw new Error("Wallet not connected");
+      if (!anchorWallet) throw new Error("Wallet not found");
+      if (!anchorWallet.publicKey) throw new Error("Wallet not connected");
       const initializeZeroAccountInstruction = async (space: number) => {
         const newAccount = Keypair.generate();
         const lamportsForRentExemption =
@@ -110,7 +122,7 @@ export const ProgramProvider: FC<PropsWithChildren> = ({ children }) => {
             space
           );
         const createAccountInstruction = SystemProgram.createAccount({
-          fromPubkey: wallet.publicKey!,
+          fromPubkey: anchorWallet.publicKey!,
           newAccountPubkey: newAccount.publicKey,
           lamports: lamportsForRentExemption,
           space,
@@ -133,52 +145,46 @@ export const ProgramProvider: FC<PropsWithChildren> = ({ children }) => {
         initializeZeroAccountInstruction(program.account.lots.size),
       ]);
 
-
-      
-
-
       const _usdcMintKeyPair = Keypair.generate();
       const _usdcMint = usdcMint ?? _usdcMintKeyPair.publicKey;
       const createUSDCMintInstruction: TransactionInstruction[] | [] = usdcMint
         ? []
         : await (async () => {
-            console.log("are you alive? ", wallet.publicKey);
-
             const createAccountInstruction = SystemProgram.createAccount({
               fromPubkey: anchorWallet!.publicKey,
               newAccountPubkey: _usdcMint,
               space: MINT_SIZE,
-              lamports: await program.provider.connection.getMinimumBalanceForRentExemption(MINT_SIZE),
+              lamports:
+                await program.provider.connection.getMinimumBalanceForRentExemption(
+                  MINT_SIZE
+                ),
               programId: TOKEN_PROGRAM_ID,
             });
 
             const mint = createInitializeMintInstruction(
               _usdcMint,
               6,
-              wallet.publicKey!,
-              wallet.publicKey!,
+              anchorWallet.publicKey!,
+              anchorWallet.publicKey!,
               TOKEN_PROGRAM_ID
             );
             return [createAccountInstruction, mint];
           })();
 
-          console.log("TOKEN_PROGRAM_ID: ", TOKEN_PROGRAM_ID.toBase58());
-          console.log("MINT_SIZE: ", MINT_SIZE);
-
       const [contractPK] = web3.PublicKey.findProgramAddressSync(
-        [Buffer.from("contract"), wallet.publicKey.toBuffer()],
+        [Buffer.from("contract"), anchorWallet.publicKey.toBuffer()],
         program.programId
       );
-      // setContractAddress(contractPK);
-      // const contractUsdcTokenAccount = getAssociatedTokenAddressSync(
-      //   _usdcMint,
-      //   contractPK,
-      //   true,
-      //   TOKEN_PROGRAM_ID,
-      //   ASSOCIATED_TOKEN_PROGRAM_ID
-      // );
+      setContractAddress(contractPK);
+      const contractUsdcTokenAccount = getAssociatedTokenAddressSync(
+        _usdcMint,
+        contractPK,
+        true,
+        TOKEN_PROGRAM_ID,
+        ASSOCIATED_TOKEN_PROGRAM_ID
+      );
 
-      // const certificationMint = Keypair.generate();
+      const certificationMint = Keypair.generate();
 
       // /**
       //  * Accounts object containing various public keys and program IDs used in the application.
@@ -195,117 +201,68 @@ export const ProgramProvider: FC<PropsWithChildren> = ({ children }) => {
       //  * @property {PublicKey} associatedTokenProgram - The program ID of the associated token program.
       //  * @property {PublicKey} tokenProgramStandard - The program ID of the standard token program.
       //  */
-      // const accounts = {
-      //   admin: wallet.publicKey!,
-      //   contract: contractPK,
-      //   offersAccount: offersAccount.publicKey,
-      //   lotsAccount: lotsAccount.publicKey,
-      //   systemProgram: web3.SystemProgram.programId,
-      //   tokenProgram: TOKEN_2022_PROGRAM_ID,
-      //   certificationMint: certificationMint.publicKey,
-      //   usdcMint: _usdcMint,
-      //   contractUsdcTokenAccount: contractUsdcTokenAccount,
-      //   associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-      //   tokenProgramStandard: TOKEN_PROGRAM_ID,
-      // };
+      const accounts = {
+        admin: anchorWallet.publicKey!,
+        contract: contractPK,
+        offersAccount: offersAccount.publicKey,
+        lotsAccount: lotsAccount.publicKey,
+        systemProgram: web3.SystemProgram.programId,
+        tokenProgram: TOKEN_2022_PROGRAM_ID,
+        certificationMint: certificationMint.publicKey,
+        usdcMint: _usdcMint,
+        contractUsdcTokenAccount: contractUsdcTokenAccount,
+        associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+        tokenProgramStandard: TOKEN_PROGRAM_ID,
+      };
 
+      const initializeInstruction = await program.methods
+        .initialize(TREES_PER_LOT, CERTIFICATION_MINT_METADATA)
+        .accounts(accounts)
+        .instruction();
 
-      // console.log("accounts: ", accounts);
-      // console.log("_usdcMint", _usdcMint);
+      const message = new web3.TransactionMessage({
+        payerKey: anchorWallet.publicKey!,
+        recentBlockhash: (
+          await program.provider.connection.getLatestBlockhash()
+        ).blockhash,
+        instructions: [
+          createOffersAccountInstruction,
+          createLotsAccountInstruction,
+          ...createUSDCMintInstruction,
+          initializeInstruction,
+        ],
+      }).compileToV0Message();
 
-   
+      const tx = new VersionedTransaction(message);
 
+      console.log("Cert Mint", certificationMint.publicKey.toBase58());
+      console.log("Anchor wallet", anchorWallet?.publicKey.toBase58());
+      console.log("Usdc key", _usdcMintKeyPair.publicKey.toBase58());
+      console.log("Offers Account", offersAccount.publicKey.toBase58());
+      console.log("Lots Account", lotsAccount.publicKey.toBase58());
 
-      // const initializeInstruction = await program.methods.initialize(TREES_PER_LOT, CERTIFICATION_MINT_METADATA).accounts(accounts).instruction();
+      const walletSignedTx = await anchorWallet?.signTransaction(tx);
+      walletSignedTx?.sign([
+        _usdcMintKeyPair,
+        offersAccount,
+        lotsAccount,
+        certificationMint,
+      ]);
 
-      // const message = new web3.TransactionMessage({
-      //   payerKey: wallet.publicKey!,
-      //   recentBlockhash: (await program.provider.connection.getLatestBlockhash()).blockhash,
-      //   instructions: [
-      //     createOffersAccountInstruction,
-      //     createLotsAccountInstruction,
-      //     ...createUSDCMintInstruction,
-      //     initializeInstruction
-      //   ],
-      // }).compileToV0Message();
+      if (!walletSignedTx) throw new Error("walletSignedTx is undefined");
 
-      // const tx = new VersionedTransaction(message);
-      
-      // console.log("Cert Mint", certificationMint.publicKey.toBase58());
-      // console.log("Anchor wallet", anchorWallet?.publicKey.toBase58());
-      // console.log("Usdc key", _usdcMintKeyPair.publicKey.toBase58());
-      // console.log("Offers Account", offersAccount.publicKey.toBase58());
-      // console.log("Lots Account", lotsAccount.publicKey.toBase58());
-
-      // const walletSignedTx = await anchorWallet?.signTransaction(tx);
-      // walletSignedTx?.sign([_usdcMintKeyPair, offersAccount, lotsAccount, certificationMint]);
-
-      // if(!walletSignedTx) throw new Error("walletSignedTx is undefined");
-
-      // console.log("walletSignedTx", walletSignedTx.message.staticAccountKeys.map((k) => k.toBase58()));
-
-      // const confirmedTx = await program.provider.sendAndConfirm!(walletSignedTx).catch(async (err) => {
-      //   if(err instanceof SendTransactionError) console.error(await err.getLogs(program.provider.connection));
-      //   console.error(err);
-      //   throw new Error("Transaction failed");
-      // });
-
-      // console.log("are we here?");
-      console.log("contractPK", contractPK.toBase58());
+      await program.provider.sendAndConfirm!(walletSignedTx).catch(
+        async (err) => {
+          if (err instanceof SendTransactionError)
+            console.error(await err.getLogs(program.provider.connection));
+          console.error(err);
+          throw new Error("Transaction failed");
+        }
+      );
 
       return loadContract(contractPK);
-
-
- 
-
-
-
-
-
-      
-
- 
-
-      // const sendPrepareAccountsTxPromise = await anchorWallet?.signTransaction(
-      //   tx
-      //   // program.provider.connection
-      // );
-      // console.log({sendPrepareAccountsTxPromise})
-      // console.log(sendPrepareAccountsTxPromise?.signatures.map((s) => s.publicKey.toBase58()));
-
-      // if (!sendPrepareAccountsTxPromise)
-      //   throw new Error("sendPrepareAccountsTxPromise is undefined");
-
-
-      // const [initializeTx] = await Promise.all([
-      //   initializeTxPromise,
-      //   confirmTx(
-      //     await sendPrepareAccountsTxPromise,
-      //     program.provider.connection
-      //   ),
-      // ]);
-
-      // const txHash = await wallet.sendTransaction(
-      //   initializeTx,
-      //   program.provider.connection
-      // );
-      // await confirmTx(txHash, program.provider.connection);
-      // return loadContract(contractPK);
     },
-    [program, wallet, anchorWallet]
-  );
-
-  const loadContract = useCallback(
-    async (contractAddress: PublicKey) => {
-      if (!program) throw new Error("Program not initialized");
-      if (contractAddress != _contractAddress) {
-        setContractAddress(contractAddress);
-      }
-      const contract = await program.account.contract.fetch(contractAddress);
-      setContract(contract);
-      return contract;
-    },
-    [program, _contractAddress]
+    [program, anchorWallet, loadContract]
   );
 
   return (
