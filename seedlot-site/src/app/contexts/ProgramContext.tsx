@@ -52,6 +52,26 @@ const CERTIFICATION_MINT_METADATA: MintMetadata = {
   managerForLot: null,
 };
 
+export const useVersionedTx = () => {
+  const anchorWallet = useAnchorWallet();
+  const { program } = useProgramContext();
+  if (!anchorWallet || !program) return undefined;
+
+  const getVersionedTx = async (instructions: TransactionInstruction[]) => {
+    const message = new web3.TransactionMessage({
+      payerKey: anchorWallet.publicKey!,
+      recentBlockhash: (await program.provider.connection.getLatestBlockhash())
+        .blockhash,
+      instructions,
+    }).compileToV0Message();
+
+    const tx = new VersionedTransaction(message);
+    return tx;
+  };
+
+  return getVersionedTx;
+};
+
 const ProgramContext = createContext<{
   program?: Program<SeedlotContracts>;
   contract?: Contract;
@@ -92,6 +112,8 @@ export const ProgramProvider: FC<PropsWithChildren> = ({ children }) => {
     ) as Program<SeedlotContracts>;
   }, [provider]);
 
+  const getVersionedTx = useVersionedTx();
+
   const loadContract = useCallback(
     async (contractAddress: PublicKey) => {
       if (!program) throw new Error("Program not initialized");
@@ -115,6 +137,7 @@ export const ProgramProvider: FC<PropsWithChildren> = ({ children }) => {
       if (!program) throw new Error("Program not initialized");
       if (!anchorWallet) throw new Error("Wallet not found");
       if (!anchorWallet.publicKey) throw new Error("Wallet not connected");
+      if (!getVersionedTx) throw new Error("VersionedTx not found");
       const initializeZeroAccountInstruction = async (space: number) => {
         const newAccount = Keypair.generate();
         const lamportsForRentExemption =
@@ -220,27 +243,18 @@ export const ProgramProvider: FC<PropsWithChildren> = ({ children }) => {
         .accounts(accounts)
         .instruction();
 
-      const message = new web3.TransactionMessage({
-        payerKey: anchorWallet.publicKey!,
-        recentBlockhash: (
-          await program.provider.connection.getLatestBlockhash()
-        ).blockhash,
-        instructions: [
-          createOffersAccountInstruction,
-          createLotsAccountInstruction,
-          ...createUSDCMintInstruction,
-          initializeInstruction,
-        ],
-      }).compileToV0Message();
-
-      const tx = new VersionedTransaction(message);
-
       console.log("Cert Mint", certificationMint.publicKey.toBase58());
       console.log("Anchor wallet", anchorWallet?.publicKey.toBase58());
       console.log("Usdc key", _usdcMintKeyPair.publicKey.toBase58());
       console.log("Offers Account", offersAccount.publicKey.toBase58());
       console.log("Lots Account", lotsAccount.publicKey.toBase58());
 
+      const tx = await getVersionedTx([
+        createOffersAccountInstruction,
+        createLotsAccountInstruction,
+        ...createUSDCMintInstruction,
+        initializeInstruction,
+      ]);
       const walletSignedTx = await anchorWallet?.signTransaction(tx);
       walletSignedTx?.sign([
         _usdcMintKeyPair,

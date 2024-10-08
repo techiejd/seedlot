@@ -1,8 +1,9 @@
-import { useWallet } from "@solana/wallet-adapter-react";
+import { useAnchorWallet, useWallet } from "@solana/wallet-adapter-react";
 import {
   CertificationTier,
   confirmTx,
   useProgramContext,
+  useVersionedTx,
 } from "../contexts/ProgramContext";
 import { PublicKey, SystemProgram } from "@solana/web3.js";
 import {
@@ -13,11 +14,19 @@ import { useManagerCertificationAta } from "./useAta";
 
 export const useCertify = (manager: PublicKey) => {
   const { program, contract, contractAddress } = useProgramContext();
-  const wallet = useWallet();
+  const wallet = useAnchorWallet();
   const managerAta = useManagerCertificationAta(manager);
+  const getVersionedTx = useVersionedTx();
 
   const certify = async (tier: CertificationTier) => {
-    if (!program || !contract || !contractAddress || !wallet.publicKey) {
+    if (
+      !program ||
+      !contract ||
+      !contractAddress ||
+      !wallet?.publicKey ||
+      !getVersionedTx ||
+      !program.provider.sendAndConfirm
+    ) {
       throw new Error(
         `Program, contract, contract address, or wallet not set: ${JSON.stringify(
           { program, contract, contractAddress, wallet }
@@ -35,15 +44,14 @@ export const useCertify = (manager: PublicKey) => {
       manager: manager,
       certificationMint: contract.certificationMint,
     };
-    const tx = await program.methods
+    const ix = await program.methods
       .certify(tier)
       .accounts(accounts)
-      .transaction();
-    const txHash = await wallet.sendTransaction(
-      tx,
-      program.provider.connection
-    );
-    return await confirmTx(txHash, program.provider.connection);
+      .instruction();
+    const tx = await getVersionedTx([ix]);
+    const txHash = await wallet.signTransaction(tx);
+    const confirmedTx = await program.provider.sendAndConfirm(tx);
+    return await confirmTx(confirmedTx, program.provider.connection);
   };
 
   return certify;
@@ -81,7 +89,7 @@ export const useDecertify = (manager: PublicKey) => {
       tx,
       program.provider.connection
     );
-    return await confirmTx(txHash, program.provider.connection);
+    return txHash;
   };
 
   return decertify;

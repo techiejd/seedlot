@@ -2,6 +2,7 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { User } from "@/app/models/User";
 import { useCertify } from "@/app/hooks/useCertify";
+import { PublicKey } from "@solana/web3.js";
 
 // Add deny button
 // and revoke button
@@ -15,7 +16,7 @@ type Certificate = {
 };
 
 const ApproveButton = ({ managerPK }: { managerPK: string }) => {
-  const certify = useCertify(managerPK);
+  const certify = useCertify(new PublicKey(managerPK));
 
   return (
     <button
