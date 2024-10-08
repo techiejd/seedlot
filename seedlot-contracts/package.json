@@ -11,6 +11,7 @@
     "@solana/spl-token-metadata": "^0.1.5"
   },
   "devDependencies": {
+    "@solana/web3.js": "^1.95.3",
     "@types/bn.js": "^5.1.0",
     "@types/jest": "^29.5.13",
     "chai": "^4.3.4",

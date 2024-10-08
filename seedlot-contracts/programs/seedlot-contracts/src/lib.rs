@@ -22,7 +22,7 @@ pub use offers::*;
 pub use orders::*;
 use utils::{init_mint, InitMint, InitMintBumps, MintMetadata};
 
-declare_id!("2zfu7HKSjPFJpi8Ga5EUdPXEQDoR3RV25xUuyFViqx5R");
+declare_id!("DAyGFg4oHpfa7sWqK2TutD48zbnqrZffF3eRf9cfxwpy");
 
 #[program]
 pub mod seedlot_contracts {

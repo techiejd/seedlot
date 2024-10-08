@@ -77,7 +77,8 @@ pub struct FulfilledOrderMints {
 
 impl Offers {
     pub const TOTAL_OFFERS: u64 = 300;
-    pub const LEN: usize = 32 // owner Pubkey
+    pub const LEN: usize = 8 // Discriminator
+    + 32 // owner Pubkey
     + 32 // tail u64
     + (Self::TOTAL_OFFERS as usize * 32);
 }

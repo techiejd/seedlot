@@ -311,7 +311,6 @@ pub fn burn_frozen_tokens_from(ctx: Context<BurnFrozenTokensFrom>, amount: u64) 
 }
 
 pub fn mint_frozen_tokens_to(ctx: Context<MintFrozenTokensTo>, amount: u64) -> Result<()> {
-    msg!("About to thaw in mint_frozen_tokens_to");
     // Thaw the account before minting
     thaw_account(CpiContext::new_with_signer(
         ctx.accounts.token_program.to_account_info(),
@@ -342,7 +341,6 @@ pub fn mint_frozen_tokens_to(ctx: Context<MintFrozenTokensTo>, amount: u64) -> R
         ),
         amount,
     )?;
-    msg!("About to freeze in mint_frozen_tokens_to");
     // Freeze the account after minting
     freeze_account(CpiContext::new_with_signer(
         ctx.accounts.token_program.to_account_info(),

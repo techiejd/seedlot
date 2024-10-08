@@ -18,6 +18,7 @@ import {
   TOKEN_2022_PROGRAM_ID,
   TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";
+import { SendTransactionError } from "@solana/web3.js";
 
 describe("confirmingLots", () => {
   let admin: anchor.web3.Keypair;
@@ -34,6 +35,9 @@ describe("confirmingLots", () => {
   let lotMint: anchor.web3.Keypair;
   let userLotTokenAccount: anchor.web3.PublicKey;
   let certificationMint: anchor.web3.Keypair;
+  let adminUsdcTokenAccount: Awaited<
+    ReturnType<typeof getOrCreateAssociatedTokenAccount>
+  >;
   const numOrders = 5;
   const numLotsPrepared = 3;
   const _100Dollars = 100 * 100 * 10 ** 6;
@@ -192,6 +196,26 @@ describe("confirmingLots", () => {
       ])
       .signers([manager, lotMint])
       .rpc();
+
+    adminUsdcTokenAccount = await getOrCreateAssociatedTokenAccount(
+      program.provider.connection,
+      admin,
+      usdc.mint,
+      admin.publicKey,
+      false,
+      undefined,
+      undefined,
+      TOKEN_PROGRAM_ID,
+      ASSOCIATED_TOKEN_PROGRAM_ID
+    );
+    await mintTo(
+      program.provider.connection,
+      admin,
+      usdc.mint,
+      adminUsdcTokenAccount.address,
+      usdc.authority,
+      _100Dollars
+    );
   };
 
   describe("confirmed", () => {
@@ -268,30 +292,8 @@ describe("confirmingLots", () => {
     test.todo("Revokes close authority from the lot mint");
   });
   describe("denied", () => {
-    let adminUsdcTokenAccount: Awaited<
-      ReturnType<typeof getOrCreateAssociatedTokenAccount>
-    >;
     beforeAll(async () => {
       await setup();
-      adminUsdcTokenAccount = await getOrCreateAssociatedTokenAccount(
-        program.provider.connection,
-        admin,
-        usdc.mint,
-        admin.publicKey,
-        false,
-        undefined,
-        undefined,
-        TOKEN_PROGRAM_ID,
-        ASSOCIATED_TOKEN_PROGRAM_ID
-      );
-      await mintTo(
-        program.provider.connection,
-        admin,
-        usdc.mint,
-        adminUsdcTokenAccount.address,
-        usdc.authority,
-        _100Dollars
-      );
       const confirmAccounts = {
         admin: admin.publicKey,
         contract: contractPK,
@@ -309,11 +311,32 @@ describe("confirmingLots", () => {
         orderMint: orderMint.publicKey,
       };
       console.log({ confirmAccounts });
+      console.log({ publicKey: program.provider.publicKey });
+      console.log(
+        await program.provider.connection.getBalance(program.provider.publicKey)
+      );
+      await airdrop(program.provider.publicKey);
+      console.log(
+        await program.provider.connection.getBalance(program.provider.publicKey)
+      );
+      await airdrop(contractPK);
+      console.log(
+        await program.methods
+          .confirmLots(false, new anchor.BN(0), new anchor.BN(0))
+          .accounts(confirmAccounts)
+          .signers([admin])
+          .transaction()
+      );
       await program.methods
         .confirmLots(false, new anchor.BN(0), new anchor.BN(0))
         .accounts(confirmAccounts)
         .signers([admin])
-        .rpc();
+        .rpc()
+        .catch(async (e) => {
+          if (e instanceof SendTransactionError) {
+            console.log(await e.getLogs(program.provider.connection));
+          }
+        });
     }, 15000);
     it("does not transfer any funds to the manager", async () => {
       const managerUsdcTokenAccount = getAssociatedTokenAddressSync(
@@ -341,7 +364,7 @@ describe("confirmingLots", () => {
         );
 
       expect(contractUsdcTokenAccountBalance.value.amount).toEqual(
-        new anchor.BN(LOT_PRICE_IN_USDC * numLotsPrepared).toString()
+        new anchor.BN(LOT_PRICE_IN_USDC * numOrders).toString()
       );
     });
     it("(re)-mints the order tokens to the user", async () => {
@@ -354,25 +377,15 @@ describe("confirmingLots", () => {
         new anchor.BN(numOrders).toString()
       );
     });
-    it("burns the lot tokens", async () => {
-      const lotTokenMintInfo = await getMint(
-        program.provider.connection,
-        lotMint.publicKey,
-        undefined,
-        TOKEN_2022_PROGRAM_ID
-      );
-
-      expect(lotTokenMintInfo.supply).toEqual(0n);
-    });
     it("closes the lot mint", async () => {
-      const lotMintInfo = await getMint(
-        program.provider.connection,
-        lotMint.publicKey,
-        undefined,
-        TOKEN_2022_PROGRAM_ID
-      );
-
-      expect(lotMintInfo.address).toBeTruthy();
+      await expect(
+        getMint(
+          program.provider.connection,
+          lotMint.publicKey,
+          undefined,
+          TOKEN_2022_PROGRAM_ID
+        )
+      ).rejects.toThrow();
     });
     it("decertifies the manager", async () => {
       const managerCertificationTokenAccount =

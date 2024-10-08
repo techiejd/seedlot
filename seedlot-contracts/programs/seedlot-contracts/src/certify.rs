@@ -69,7 +69,6 @@ pub mod instructions {
         let number_of_tokens_needed_to_decertify =
             decertified_tier_as_u64 - current_number_of_certification_tokens;
 
-        msg!("About to mint in decertified");
         mint_frozen_tokens_to(
             Context::new(
                 ctx.program_id,
