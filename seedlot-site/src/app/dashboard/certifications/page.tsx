@@ -1,6 +1,10 @@
 "use client";
 import React, { useState, useMemo, useEffect } from "react";
 import {User} from "@/app/models/User";
+import {  useCertify } from "@/app/hooks/useCertify";
+
+// Add deny button
+// and revoke button
 
 type Certificate = {
   id: string;
@@ -12,6 +16,9 @@ type Certificate = {
 
 export default function PendingCertificationsPage() {
   const [certifications, setCertifications] = useState<Certificate[]>([]);
+
+  // pull from manager - walletAddress/publicKey
+  const certify = useCertify();
 
   useEffect(() => {
     const fetchCerts = async () => {
@@ -33,18 +40,11 @@ export default function PendingCertificationsPage() {
 
   const approveApplication = async (id: string) => {
     console.log("approve");
-    // try {
-    //   const response = await fetch(`/api/certification/${id}/approve`, {
-    //     method: 'POST',
-    //   });
-    //   if (!response.ok) {
-    //     throw new Error('Network response was not ok');
-    //   }
-    //   const updatedCertifications = certifications.filter((cert) => cert.id !== id);
-    //   setCertifications(updatedCertifications);
-    // } catch (error) {
-    //   console.error('Failed to approve application:', error);
-    // }
+    try {
+      certify({ tier1: {} });
+    } catch (error) { 
+
+    }
   };
 
   return (

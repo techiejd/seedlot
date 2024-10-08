@@ -150,6 +150,21 @@ export const ProgramProvider: FC<PropsWithChildren> = ({ children }) => {
 
       const certificationMint = Keypair.generate();
 
+      /**
+       * Accounts object containing various public keys and program IDs used in the application.
+       * 
+       * @property {PublicKey} admin - The public key of the admin's wallet.
+       * @property {PublicKey} contract - The public key of the contract.
+       * @property {PublicKey} offersAccount - The public key of the offers account.
+       * @property {PublicKey} lotsAccount - The public key of the lots account.
+       * @property {PublicKey} systemProgram - The program ID of the system program.
+       * @property {PublicKey} tokenProgram - The program ID of the token program (2022).
+       * @property {PublicKey} certificationMint - The public key of the certification mint.
+       * @property {PublicKey} usdcMint - The public key of the USDC mint.
+       * @property {PublicKey} contractUsdcTokenAccount - The public key of the contract's USDC token account.
+       * @property {PublicKey} associatedTokenProgram - The program ID of the associated token program.
+       * @property {PublicKey} tokenProgramStandard - The program ID of the standard token program.
+       */
       const accounts = {
         admin: wallet.publicKey!,
         contract: contractPK,

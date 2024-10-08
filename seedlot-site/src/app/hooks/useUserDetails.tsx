@@ -2,12 +2,16 @@ import { useState, useEffect, useMemo } from "react";
 import { useUserContext } from "@/app/contexts/UserContext";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { getUserByWalletAddress } from "@/app/repository/user/getUser";
+import { User } from "@/app/models/User";
+
+type UserDetails = User | null;
+
 
 // Custom hook to manage user details
 export const useUserDetails = () => {
   const { publicKey, connected } = useWallet();
   const {
-    userDetails,
+    userDetails ,
     setUserDetails,
     userDetailsNotFound,
     setUserDetailsNotFound,
