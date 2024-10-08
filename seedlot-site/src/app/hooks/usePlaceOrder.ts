@@ -1,5 +1,5 @@
-import { useWallet } from "@solana/wallet-adapter-react";
-import { confirmTx, useProgramContext } from "../contexts/ProgramContext";
+import { useAnchorWallet } from "@solana/wallet-adapter-react";
+import { useProgramContext, useVersionedTx } from "../contexts/ProgramContext";
 import { PublicKey, SystemProgram } from "@solana/web3.js";
 import { getClientOrderAta, useUsdcAta } from "./useAta";
 import {
@@ -17,20 +17,27 @@ export type Order = {
 
 const usePlaceOrder = () => {
   const { program, contract, contractAddress } = useProgramContext();
-  const wallet = useWallet();
+  const wallet = useAnchorWallet();
   const userUsdcAta = useUsdcAta(
-    wallet.publicKey == null ? undefined : wallet.publicKey
+    wallet && wallet?.publicKey ? wallet.publicKey : undefined
   );
+  const getVersionedTx = useVersionedTx();
 
   const placeOrder = async (order: Order) => {
-    if (!program || !contract || !contractAddress || !wallet.publicKey) {
+    if (
+      !program ||
+      !contract ||
+      !contractAddress ||
+      !wallet?.publicKey ||
+      !getVersionedTx ||
+      !program.provider.sendAndConfirm
+    ) {
       throw new Error(
         `Program, contract, contract address, or wallet not set: ${JSON.stringify(
           { program, contract, contractAddress, wallet }
         )}`
       );
     }
-    const numOrders = 5;
     const userTokenAccount = getClientOrderAta(wallet.publicKey, order.mint);
     const accounts = {
       user: wallet.publicKey,
@@ -47,15 +54,14 @@ const usePlaceOrder = () => {
       tokenProgramStandard: TOKEN_PROGRAM_ID,
     };
 
-    const tx = await program.methods
+    const ix = await program.methods
       .placeOrder(new BN(order.mintIndexInOffers), new BN(order.amount))
       .accounts(accounts)
-      .transaction();
+      .instruction();
 
-    return await confirmTx(
-      await wallet.sendTransaction(tx, program.provider.connection),
-      program.provider.connection
-    );
+    const tx = await getVersionedTx([ix]);
+
+    return await program.provider.sendAndConfirm(tx);
   };
 
   return { placeOrder };

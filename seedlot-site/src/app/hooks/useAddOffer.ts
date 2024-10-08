@@ -1,8 +1,9 @@
-import { useWallet } from "@solana/wallet-adapter-react";
+import { useAnchorWallet, useWallet } from "@solana/wallet-adapter-react";
 import {
   confirmTx,
   MintMetadata,
   useProgramContext,
+  useVersionedTx,
 } from "../contexts/ProgramContext";
 import { Keypair, SystemProgram, SYSVAR_RENT_PUBKEY } from "@solana/web3.js";
 import { TOKEN_2022_PROGRAM_ID } from "@solana/spl-token";
@@ -15,10 +16,18 @@ export type Offer = {
 
 const useAddOffer = () => {
   const { program, contract, contractAddress } = useProgramContext();
-  const wallet = useWallet();
+  const wallet = useAnchorWallet();
+  const getVersionedTx = useVersionedTx();
 
   const addOffer = async (offer: Offer) => {
-    if (!program || !contract || !contractAddress || !wallet.publicKey) {
+    if (
+      !program ||
+      !contract ||
+      !contractAddress ||
+      !wallet?.publicKey ||
+      !getVersionedTx ||
+      !program.provider.sendAndConfirm
+    ) {
       throw new Error(
         `Program, contract, contract address, or wallet not set: ${JSON.stringify(
           { program, contract, contractAddress, wallet }
@@ -35,7 +44,7 @@ const useAddOffer = () => {
         offer.variety,
         offer.price.toString(),
       ],
-      managerForLot: null
+      managerForLot: null,
     };
 
     const orderMint = Keypair.generate();
@@ -48,16 +57,16 @@ const useAddOffer = () => {
       rent: SYSVAR_RENT_PUBKEY,
       tokenProgram: TOKEN_2022_PROGRAM_ID,
     };
-    const tx = await program.methods
+    const ix = await program.methods
       .addOffer(orderMintMetadata)
       .accounts(accounts)
       .signers([orderMint])
-      .transaction();
-    const txHash = await wallet.sendTransaction(
-      tx,
-      program.provider.connection
+      .instruction();
+
+    const txHash = await program.provider.sendAndConfirm(
+      await getVersionedTx([ix])
     );
-    return await confirmTx(txHash, program.provider.connection);
+    return txHash;
   };
 
   return addOffer;

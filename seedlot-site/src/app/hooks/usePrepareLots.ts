@@ -1,5 +1,9 @@
-import { useWallet } from "@solana/wallet-adapter-react";
-import { confirmTx, useProgramContext } from "../contexts/ProgramContext";
+import { useAnchorWallet } from "@solana/wallet-adapter-react";
+import {
+  confirmTx,
+  useProgramContext,
+  useVersionedTx,
+} from "../contexts/ProgramContext";
 import {
   ComputeBudgetProgram,
   Keypair,
@@ -24,10 +28,18 @@ export type PrepareLotsParams = {
 
 const usePrepareLots = () => {
   const { program, contract, contractAddress } = useProgramContext();
-  const wallet = useWallet();
+  const wallet = useAnchorWallet();
+  const getVersionedTx = useVersionedTx();
 
   const prepareLots = async (params: PrepareLotsParams) => {
-    if (!program || !contract || !contractAddress || !wallet.publicKey) {
+    if (
+      !program ||
+      !contract ||
+      !contractAddress ||
+      !wallet?.publicKey ||
+      !getVersionedTx ||
+      !program.provider.sendAndConfirm
+    ) {
       throw new Error(
         `Program, contract, contract address, or wallet not set: ${JSON.stringify(
           { program, contract, contractAddress, wallet }
@@ -71,7 +83,7 @@ const usePrepareLots = () => {
       rent: SYSVAR_RENT_PUBKEY,
     };
 
-    const tx = await program.methods
+    const ix = await program.methods
       .prepareLots(
         new BN(params.orderMintIndex),
         new BN(params.numLotsToPrepare),
@@ -84,13 +96,12 @@ const usePrepareLots = () => {
           units: 400_000,
         }),
       ])
-      .transaction();
+      .instruction();
 
-    const txHash = await wallet.sendTransaction(
-      tx,
-      program.provider.connection
+    const txHash = await program.provider.sendAndConfirm(
+      await getVersionedTx([ix])
     );
-    return await confirmTx(txHash, program.provider.connection);
+    return txHash;
   };
 
   return prepareLots;

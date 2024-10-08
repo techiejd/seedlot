@@ -26,7 +26,6 @@ import {
   PublicKey,
   SendTransactionError,
   SystemProgram,
-  Transaction,
   TransactionInstruction,
   VersionedTransaction,
 } from "@solana/web3.js";
