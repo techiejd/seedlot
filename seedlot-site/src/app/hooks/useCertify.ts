@@ -7,9 +7,12 @@ import {
 import { PublicKey, SystemProgram } from "@solana/web3.js";
 import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
+  getAccount,
+  getOrCreateAssociatedTokenAccount,
   TOKEN_2022_PROGRAM_ID,
 } from "@solana/spl-token";
 import { useManagerCertificationAta } from "./useAta";
+import { useEffect, useState } from "react";
 
 export const useCertify = (manager: PublicKey) => {
   const { program, contract, contractAddress } = useProgramContext();
@@ -91,4 +94,49 @@ export const useDecertify = (manager: PublicKey) => {
   };
 
   return decertify;
+};
+
+export const useManagerCertificationTier = (manager: PublicKey) => {
+  const managerAta = useManagerCertificationAta(manager);
+  const { program, contract } = useProgramContext();
+  const [certificationTier, setCertificationTier] = useState<
+    CertificationTier | undefined
+  >();
+  useEffect(() => {
+    if (!managerAta || !program || !contract?.certificationMint) return;
+    getAccount(
+      program.provider.connection,
+      managerAta,
+      undefined,
+      TOKEN_2022_PROGRAM_ID
+    )
+      .then((account) => {
+        const tierNumber = account.amount;
+        setCertificationTier(
+          (() => {
+            switch (tierNumber) {
+              case 0n:
+                return { undefined: {} };
+              case 1n:
+                return { tier1: {} };
+              case 2n:
+                return { tier2: {} };
+              case 3n:
+                return { tier3: {} };
+              case 4n:
+                return { tier4: {} };
+              case 5n:
+                return { decertified: {} };
+              default:
+                return undefined;
+            }
+          })()
+        );
+      })
+      .catch((error) => {
+        console.error(error);
+        return undefined;
+      });
+  }, [managerAta, program, contract?.certificationMint]);
+  return certificationTier;
 };

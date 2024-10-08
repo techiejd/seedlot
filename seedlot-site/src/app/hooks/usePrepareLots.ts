@@ -1,6 +1,5 @@
 import { useAnchorWallet } from "@solana/wallet-adapter-react";
 import {
-  confirmTx,
   useProgramContext,
   useSignSendAndConfirmIxs,
 } from "../contexts/ProgramContext";
