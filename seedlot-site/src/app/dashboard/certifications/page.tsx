@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useMemo, useEffect } from "react";
-import {User} from "@/app/models/User";
-import {  useCertify } from "@/app/hooks/useCertify";
+import { User } from "@/app/models/User";
+import { useCertify } from "@/app/hooks/useCertify";
 
 // Add deny button
 // and revoke button
@@ -14,11 +14,21 @@ type Certificate = {
   application: JsonWebKey;
 };
 
+const ApproveButton = ({ managerPK }: { managerPK: string }) => {
+  const certify = useCertify(managerPK);
+
+  return (
+    <button
+      onClick={() => certify({ tier1: {} })}
+      className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-700"
+    >
+      Approve
+    </button>
+  );
+};
+
 export default function PendingCertificationsPage() {
   const [certifications, setCertifications] = useState<Certificate[]>([]);
-
-  // pull from manager - walletAddress/publicKey
-  const certify = useCertify();
 
   useEffect(() => {
     const fetchCerts = async () => {
@@ -38,15 +48,6 @@ export default function PendingCertificationsPage() {
     fetchCerts();
   }, []);
 
-  const approveApplication = async (id: string) => {
-    console.log("approve");
-    try {
-      certify({ tier1: {} });
-    } catch (error) { 
-
-    }
-  };
-
   return (
     <div className="space-y-12 px-8">
       <div className="border-b border-gray-900/10 pb-12">
@@ -62,7 +63,7 @@ export default function PendingCertificationsPage() {
                   User ID
                 </th>
                 <th scope="col" className="px-6 py-3">
-                 Manager Name
+                  Manager Name
                 </th>
                 <th scope="col" className="px-6 py-3">
                   Status
@@ -79,59 +80,61 @@ export default function PendingCertificationsPage() {
               </tr>
             </thead>
             <tbody>
-              {certifications.map((certification: Certificate, index: number) => (
-                <tr
-                  key={index}
-                  className="bg-white border-b dark:bg-gray-800 dark:border-gray-700"
-                >
-                  <td
-                    scope="row"
-                    className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white"
+              {certifications.map(
+                (certification: Certificate, index: number) => (
+                  <tr
+                    key={index}
+                    className="bg-white border-b dark:bg-gray-800 dark:border-gray-700"
                   >
-                    {certification.Users[0].user.id}
-                  </td>
-                  <td
-                    scope="row"
-                    className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white"
-                  >
-                    {certification.Users[0].user.name}
-                  </td>
-                  <td className="px-6 py-4">
-                    <span
-                      className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                        certification.status === "pending"
-                          ? "bg-yellow-100 text-yellow-800"
-                          : "bg-green-100 text-green-800"
-                      }`}
+                    <td
+                      scope="row"
+                      className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white"
                     >
-                      {certification.status}
-                    </span>
-                  </td>
-                  <td
-                    scope="row"
-                    className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white"
-                  >
-                    {certification.type}
-                  </td>
+                      {certification.Users[0].user.id}
+                    </td>
+                    <td
+                      scope="row"
+                      className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white"
+                    >
+                      {certification.Users[0].user.name}
+                    </td>
+                    <td className="px-6 py-4">
+                      <span
+                        className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                          certification.status === "pending"
+                            ? "bg-yellow-100 text-yellow-800"
+                            : "bg-green-100 text-green-800"
+                        }`}
+                      >
+                        {certification.status}
+                      </span>
+                    </td>
+                    <td
+                      scope="row"
+                      className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white"
+                    >
+                      {certification.type}
+                    </td>
                     <td className="px-6 py-4">
                       <div className="space-y-2 max-h-24 overflow-y-auto">
-                        {Object.entries(certification.application).map(([key, value]) => (
-                          <div key={key}>
-                            <span className="font-bold">{key}:</span> {String(value)}
-                          </div>
-                        ))}
+                        {Object.entries(certification.application).map(
+                          ([key, value]) => (
+                            <div key={key}>
+                              <span className="font-bold">{key}:</span>{" "}
+                              {String(value)}
+                            </div>
+                          )
+                        )}
                       </div>
                     </td>
-                  <td className="px-6 py-4">
-                    <button
-                      onClick={() => approveApplication(certification.id)}
-                      className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-700"
-                    >
-                      Approve
-                    </button>
-                  </td>
-                </tr>
-              ))}
+                    <td className="px-6 py-4">
+                      <ApproveButton
+                        managerPK={certification.Users[0].user.walletAddress}
+                      />
+                    </td>
+                  </tr>
+                )
+              )}
             </tbody>
           </table>
         </div>
