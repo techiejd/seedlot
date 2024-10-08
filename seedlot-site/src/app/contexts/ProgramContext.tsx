@@ -51,12 +51,15 @@ const CERTIFICATION_MINT_METADATA: MintMetadata = {
   managerForLot: null,
 };
 
-export const useVersionedTx = () => {
+export const useSignSendAndConfirmIxs = () => {
   const anchorWallet = useAnchorWallet();
   const { program } = useProgramContext();
-  if (!anchorWallet || !program) return undefined;
+  if (!anchorWallet || !program || !program.provider.sendAndConfirm)
+    return undefined;
 
-  const getVersionedTx = async (instructions: TransactionInstruction[]) => {
+  const signSendAndConfirmIxs = async (
+    instructions: TransactionInstruction[]
+  ) => {
     const message = new web3.TransactionMessage({
       payerKey: anchorWallet.publicKey!,
       recentBlockhash: (await program.provider.connection.getLatestBlockhash())
@@ -65,10 +68,11 @@ export const useVersionedTx = () => {
     }).compileToV0Message();
 
     const tx = new VersionedTransaction(message);
-    return tx;
+    const signedTx = await anchorWallet.signTransaction(tx);
+    return await program.provider.sendAndConfirm!(signedTx);
   };
 
-  return getVersionedTx;
+  return signSendAndConfirmIxs;
 };
 
 const ProgramContext = createContext<{
@@ -111,7 +115,7 @@ export const ProgramProvider: FC<PropsWithChildren> = ({ children }) => {
     ) as Program<SeedlotContracts>;
   }, [provider]);
 
-  const getVersionedTx = useVersionedTx();
+  const signSendAndConfirmIxs = useSignSendAndConfirmIxs();
 
   const loadContract = useCallback(
     async (contractAddress: PublicKey) => {
@@ -136,7 +140,7 @@ export const ProgramProvider: FC<PropsWithChildren> = ({ children }) => {
       if (!program) throw new Error("Program not initialized");
       if (!anchorWallet) throw new Error("Wallet not found");
       if (!anchorWallet.publicKey) throw new Error("Wallet not connected");
-      if (!getVersionedTx) throw new Error("VersionedTx not found");
+      if (!signSendAndConfirmIxs) throw new Error("VersionedTx not found");
       const initializeZeroAccountInstruction = async (space: number) => {
         const newAccount = Keypair.generate();
         const lamportsForRentExemption =
@@ -248,34 +252,15 @@ export const ProgramProvider: FC<PropsWithChildren> = ({ children }) => {
       console.log("Offers Account", offersAccount.publicKey.toBase58());
       console.log("Lots Account", lotsAccount.publicKey.toBase58());
 
-      const tx = await getVersionedTx([
+      await signSendAndConfirmIxs([
         createOffersAccountInstruction,
         createLotsAccountInstruction,
         ...createUSDCMintInstruction,
         initializeInstruction,
       ]);
-      const walletSignedTx = await anchorWallet?.signTransaction(tx);
-      walletSignedTx?.sign([
-        _usdcMintKeyPair,
-        offersAccount,
-        lotsAccount,
-        certificationMint,
-      ]);
-
-      if (!walletSignedTx) throw new Error("walletSignedTx is undefined");
-
-      await program.provider.sendAndConfirm!(walletSignedTx).catch(
-        async (err) => {
-          if (err instanceof SendTransactionError)
-            console.error(await err.getLogs(program.provider.connection));
-          console.error(err);
-          throw new Error("Transaction failed");
-        }
-      );
-
       return loadContract(contractPK);
     },
-    [program, anchorWallet, loadContract]
+    [program, anchorWallet, signSendAndConfirmIxs, loadContract]
   );
 
   return (

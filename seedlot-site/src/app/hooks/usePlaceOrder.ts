@@ -1,5 +1,8 @@
 import { useAnchorWallet } from "@solana/wallet-adapter-react";
-import { useProgramContext, useVersionedTx } from "../contexts/ProgramContext";
+import {
+  useProgramContext,
+  useSignSendAndConfirmIxs,
+} from "../contexts/ProgramContext";
 import { PublicKey, SystemProgram } from "@solana/web3.js";
 import { getClientOrderAta, useUsdcAta } from "./useAta";
 import {
@@ -21,7 +24,7 @@ const usePlaceOrder = () => {
   const userUsdcAta = useUsdcAta(
     wallet && wallet?.publicKey ? wallet.publicKey : undefined
   );
-  const getVersionedTx = useVersionedTx();
+  const signSendAndConfirmIxs = useSignSendAndConfirmIxs();
 
   const placeOrder = async (order: Order) => {
     if (
@@ -29,7 +32,7 @@ const usePlaceOrder = () => {
       !contract ||
       !contractAddress ||
       !wallet?.publicKey ||
-      !getVersionedTx ||
+      !signSendAndConfirmIxs ||
       !program.provider.sendAndConfirm
     ) {
       throw new Error(
@@ -59,9 +62,7 @@ const usePlaceOrder = () => {
       .accounts(accounts)
       .instruction();
 
-    const tx = await getVersionedTx([ix]);
-
-    return await program.provider.sendAndConfirm(tx);
+    return await signSendAndConfirmIxs([ix]);
   };
 
   return { placeOrder };

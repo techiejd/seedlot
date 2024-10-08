@@ -1,9 +1,8 @@
-import { useAnchorWallet, useWallet } from "@solana/wallet-adapter-react";
+import { useAnchorWallet } from "@solana/wallet-adapter-react";
 import {
   CertificationTier,
-  confirmTx,
   useProgramContext,
-  useVersionedTx,
+  useSignSendAndConfirmIxs,
 } from "../contexts/ProgramContext";
 import { PublicKey, SystemProgram } from "@solana/web3.js";
 import {
@@ -16,7 +15,7 @@ export const useCertify = (manager: PublicKey) => {
   const { program, contract, contractAddress } = useProgramContext();
   const wallet = useAnchorWallet();
   const managerAta = useManagerCertificationAta(manager);
-  const getVersionedTx = useVersionedTx();
+  const signSendAndConfirmIxs = useSignSendAndConfirmIxs();
 
   const certify = async (tier: CertificationTier) => {
     if (
@@ -24,7 +23,7 @@ export const useCertify = (manager: PublicKey) => {
       !contract ||
       !contractAddress ||
       !wallet?.publicKey ||
-      !getVersionedTx ||
+      !signSendAndConfirmIxs ||
       !program.provider.sendAndConfirm
     ) {
       throw new Error(
@@ -48,10 +47,7 @@ export const useCertify = (manager: PublicKey) => {
       .certify(tier)
       .accounts(accounts)
       .instruction();
-    const tx = await getVersionedTx([ix]);
-    const signedTx = await wallet.signTransaction(tx);
-    const confirmedTx = await program.provider.sendAndConfirm(signedTx);
-    return confirmedTx;
+    return signSendAndConfirmIxs([ix]);
   };
 
   return certify;
@@ -59,11 +55,17 @@ export const useCertify = (manager: PublicKey) => {
 
 export const useDecertify = (manager: PublicKey) => {
   const { program, contract, contractAddress } = useProgramContext();
-  const wallet = useWallet();
+  const wallet = useAnchorWallet();
   const managerAta = useManagerCertificationAta(manager);
-
+  const signSendAndConfirmIxs = useSignSendAndConfirmIxs();
   const decertify = async () => {
-    if (!program || !contract || !contractAddress || !wallet.publicKey) {
+    if (
+      !program ||
+      !contract ||
+      !contractAddress ||
+      !wallet?.publicKey ||
+      !signSendAndConfirmIxs
+    ) {
       throw new Error(
         `Program, contract, contract address, or wallet not set: ${JSON.stringify(
           { program, contract, contractAddress, wallet }
@@ -81,15 +83,11 @@ export const useDecertify = (manager: PublicKey) => {
       manager: manager,
       certificationMint: contract.certificationMint,
     };
-    const tx = await program.methods
+    const ix = await program.methods
       .certify({ decertified: {} })
       .accounts(accounts)
-      .transaction();
-    const txHash = await wallet.sendTransaction(
-      tx,
-      program.provider.connection
-    );
-    return txHash;
+      .instruction();
+    return signSendAndConfirmIxs([ix]);
   };
 
   return decertify;

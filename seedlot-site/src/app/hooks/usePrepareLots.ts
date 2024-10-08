@@ -2,7 +2,7 @@ import { useAnchorWallet } from "@solana/wallet-adapter-react";
 import {
   confirmTx,
   useProgramContext,
-  useVersionedTx,
+  useSignSendAndConfirmIxs,
 } from "../contexts/ProgramContext";
 import {
   ComputeBudgetProgram,
@@ -29,7 +29,7 @@ export type PrepareLotsParams = {
 const usePrepareLots = () => {
   const { program, contract, contractAddress } = useProgramContext();
   const wallet = useAnchorWallet();
-  const getVersionedTx = useVersionedTx();
+  const signSendAndConfirmIxs = useSignSendAndConfirmIxs();
 
   const prepareLots = async (params: PrepareLotsParams) => {
     if (
@@ -37,8 +37,7 @@ const usePrepareLots = () => {
       !contract ||
       !contractAddress ||
       !wallet?.publicKey ||
-      !getVersionedTx ||
-      !program.provider.sendAndConfirm
+      !signSendAndConfirmIxs
     ) {
       throw new Error(
         `Program, contract, contract address, or wallet not set: ${JSON.stringify(
@@ -97,11 +96,7 @@ const usePrepareLots = () => {
         }),
       ])
       .instruction();
-
-    const txHash = await program.provider.sendAndConfirm(
-      await getVersionedTx([ix])
-    );
-    return txHash;
+    return await signSendAndConfirmIxs([ix]);
   };
 
   return prepareLots;

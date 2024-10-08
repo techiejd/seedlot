@@ -3,7 +3,7 @@ import {
   confirmTx,
   MintMetadata,
   useProgramContext,
-  useVersionedTx,
+  useSignSendAndConfirmIxs,
 } from "../contexts/ProgramContext";
 import { Keypair, SystemProgram, SYSVAR_RENT_PUBKEY } from "@solana/web3.js";
 import { TOKEN_2022_PROGRAM_ID } from "@solana/spl-token";
@@ -17,7 +17,7 @@ export type Offer = {
 const useAddOffer = () => {
   const { program, contract, contractAddress } = useProgramContext();
   const wallet = useAnchorWallet();
-  const getVersionedTx = useVersionedTx();
+  const signSendAndConfirmIxs = useSignSendAndConfirmIxs();
 
   const addOffer = async (offer: Offer) => {
     if (
@@ -25,8 +25,7 @@ const useAddOffer = () => {
       !contract ||
       !contractAddress ||
       !wallet?.publicKey ||
-      !getVersionedTx ||
-      !program.provider.sendAndConfirm
+      !signSendAndConfirmIxs
     ) {
       throw new Error(
         `Program, contract, contract address, or wallet not set: ${JSON.stringify(
@@ -63,10 +62,7 @@ const useAddOffer = () => {
       .signers([orderMint])
       .instruction();
 
-    const txHash = await program.provider.sendAndConfirm(
-      await getVersionedTx([ix])
-    );
-    return txHash;
+    return signSendAndConfirmIxs([ix]);
   };
 
   return addOffer;
