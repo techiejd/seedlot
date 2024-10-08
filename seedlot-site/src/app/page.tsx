@@ -1,16 +1,22 @@
 "use client";
 import Link from "next/link";
-import { useEffect } from "react";
 import { WalletAuth } from "./components/WalletAuth/WalletAuth";
+import { useEffect } from "react";
+import { useWallet } from "@solana/wallet-adapter-react";
 import { useUserDetails } from "./hooks/useUserDetails";
 import Image from "next/image";
+import { RegisterModal } from "./components/Auth/RegisterModal";
 
 
 export default function Home() {
-  const { userDetails } = useUserDetails();
- 
+  const { userDetails, userDetailsNotFound } = useUserDetails();
+  const { publicKey } = useWallet();
+
   return (
     <div className="flex min-h-screen">
+      {userDetailsNotFound && publicKey && (
+        <RegisterModal walletAddress={publicKey.toString()}  />
+      )}
       <div className="flex flex-col items-center justify-center w-1/2 bg-gray-100">
         <Image
           src="/images/seedlot_logo_black.png"
@@ -43,7 +49,7 @@ export default function Home() {
 
         <WalletAuth />
 
-        <div className="items-bottom">
+        {/* <div className="items-bottom">
           <h5 className="text-md font-semibold mb-4">Solana Contracts</h5>
           <ul>
             <li>
@@ -51,7 +57,7 @@ export default function Home() {
               Bj5esFf6t1g1nRRw2n12NDuad4fxFoXRavFnC1daX2Zk
             </li>
           </ul>
-        </div>
+        </div> */}
       </div>
     </div>
   );

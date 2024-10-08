@@ -2,6 +2,21 @@ import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
+
+type Role = { 
+  id: number;
+  name: string;
+};
+
+type User = {
+  id: number;
+  walletAddress: string;
+  name: string;
+  roleId: number;
+  role: Role;
+  createdAt: Date;
+};
+
 /**
  * Fetches user data based on the wallet's public key and triggers authentication if the user is found.
  *
@@ -75,3 +90,5 @@ export async function getAllUsers(query?: string) {
   }
   return users;
 }
+
+export type { Role, User };

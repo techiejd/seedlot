@@ -57,6 +57,8 @@ const usePlaceOrder = () => {
       program.provider.connection
     );
   };
+
+  return { placeOrder };
 };
 
 export default usePlaceOrder;

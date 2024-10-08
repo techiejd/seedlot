@@ -5,6 +5,7 @@ import { WalletProvider } from "./walletProvider";
 import Nav from "@/app/components/Nav";
 import Link from "next/link";
 import { ProgramProvider } from "./contexts/ProgramContext";
+import { UserProvider } from "./contexts/UserContext";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -33,9 +34,11 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <WalletProvider>
-          <ProgramProvider>{children}</ProgramProvider>
-        </WalletProvider>
+        <UserProvider>
+          <WalletProvider>
+            <ProgramProvider>{children}</ProgramProvider>
+          </WalletProvider>
+        </UserProvider>
       </body>
     </html>
   );

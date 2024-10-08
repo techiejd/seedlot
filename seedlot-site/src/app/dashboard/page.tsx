@@ -1,11 +1,9 @@
 "use client";
 import React from "react";
 import { useUserDetails } from "../hooks/useUserDetails";
-interface DashboardProps {
-  children?: React.ReactNode;
-}
 
-export default function Dashboard({ children }: DashboardProps) {
+
+export default function Dashboard() {
   const { userDetails } = useUserDetails();
   if (!userDetails) {
     return (

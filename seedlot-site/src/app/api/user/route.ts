@@ -35,11 +35,11 @@ export async function GET(request: NextRequest) {
  * If there is an error during user creation, the function logs the error and returns a 500 status response with an error message.
  */
 export async function POST(request: NextRequest) {
-  const { publicKey, name, roleId } = await request.json();
+  const { walletAddress, name, roleId } = await request.json();
 
-  console.log(publicKey, name, roleId);
+  console.log(walletAddress, name, roleId);
 
-  if (!publicKey || !name || !roleId) {
+  if (!walletAddress || !name || !roleId) {
     return new Response(
       JSON.stringify({ error: "Public key, name and role are required" }),
       { status: 400 }
@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const user = await createUser(publicKey, name, roleId);
+    const user = await createUser(walletAddress, name, roleId);
     return new NextResponse(JSON.stringify({ user }), { status: 200 });
   } catch (error) {
     console.log("Custom Error creating user:", error);
