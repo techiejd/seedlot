@@ -7,10 +7,10 @@ use anchor_spl::token_2022::{
 };
 use anchor_spl::token_interface::spl_pod::optional_keys::OptionalNonZeroPubkey;
 use anchor_spl::token_interface::{
-    default_account_state_initialize, metadata_pointer_initialize, permanent_delegate_initialize,
-    token_metadata_initialize, token_metadata_update_field, DefaultAccountStateInitialize,
-    MetadataPointerInitialize, Mint, PermanentDelegateInitialize, TokenAccount,
-    TokenMetadataInitialize, TokenMetadataUpdateField,
+    default_account_state_initialize, metadata_pointer_initialize, mint_close_authority_initialize,
+    permanent_delegate_initialize, token_metadata_initialize, token_metadata_update_field,
+    DefaultAccountStateInitialize, MetadataPointerInitialize, Mint, MintCloseAuthorityInitialize,
+    PermanentDelegateInitialize, TokenAccount, TokenMetadataInitialize, TokenMetadataUpdateField,
 };
 use solana_program::program_option::COption;
 use spl_token_2022::extension::{BaseStateWithExtensions, PodStateWithExtensions};
@@ -84,6 +84,7 @@ pub fn init_mint<'info>(
         ExtensionType::DefaultAccountState,
         ExtensionType::MetadataPointer,
         ExtensionType::PermanentDelegate,
+        ExtensionType::MintCloseAuthority,
     ])?;
 
     let token_metadata_space;
@@ -173,6 +174,18 @@ pub fn init_mint<'info>(
             },
         ),
         &ctx.accounts.contract.key(),
+    )?;
+
+    mint_close_authority_initialize(
+        CpiContext::new_with_signer(
+            ctx.accounts.token_program.to_account_info(),
+            MintCloseAuthorityInitialize {
+                token_program_id: ctx.accounts.token_program.to_account_info(),
+                mint: ctx.accounts.mint.to_account_info(),
+            },
+            signer_seeds,
+        ),
+        Some(&ctx.accounts.contract.key()),
     )?;
 
     initialize_mint(
@@ -298,6 +311,7 @@ pub fn burn_frozen_tokens_from(ctx: Context<BurnFrozenTokensFrom>, amount: u64) 
 }
 
 pub fn mint_frozen_tokens_to(ctx: Context<MintFrozenTokensTo>, amount: u64) -> Result<()> {
+    msg!("About to thaw in mint_frozen_tokens_to");
     // Thaw the account before minting
     thaw_account(CpiContext::new_with_signer(
         ctx.accounts.token_program.to_account_info(),
@@ -328,6 +342,7 @@ pub fn mint_frozen_tokens_to(ctx: Context<MintFrozenTokensTo>, amount: u64) -> R
         ),
         amount,
     )?;
+    msg!("About to freeze in mint_frozen_tokens_to");
     // Freeze the account after minting
     freeze_account(CpiContext::new_with_signer(
         ctx.accounts.token_program.to_account_info(),
@@ -358,7 +373,7 @@ pub struct MintMetadata {
 pub struct MintFrozenTokensTo<'info> {
     /// CHECK: Only used for getting the associated token address.
     pub authority: AccountInfo<'info>,
-    #[account(
+    #[account(mut,
         seeds = [b"contract", contract.admin.as_ref()],
         bump
     )]

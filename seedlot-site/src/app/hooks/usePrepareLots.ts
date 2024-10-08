@@ -63,7 +63,7 @@ const usePrepareLots = () => {
       lotMint: lotMint.publicKey,
       userLotTokenAccount,
       usdcMint: contract.usdcMint,
-      contractUsdcTokenAccount: contract.usdcTokenAccount,
+      certificationMint: contract.certificationMint,
       associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
       tokenProgram: TOKEN_2022_PROGRAM_ID,
       tokenProgramStandard: TOKEN_PROGRAM_ID,

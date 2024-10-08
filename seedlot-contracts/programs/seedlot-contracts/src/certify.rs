@@ -69,6 +69,7 @@ pub mod instructions {
         let number_of_tokens_needed_to_decertify =
             decertified_tier_as_u64 - current_number_of_certification_tokens;
 
+        msg!("About to mint in decertified");
         mint_frozen_tokens_to(
             Context::new(
                 ctx.program_id,
@@ -117,6 +118,7 @@ pub struct Certify<'info> {
     )]
     pub manager: SystemAccount<'info>,
     #[account(
+        mut,
         seeds = [b"contract", admin.key().as_ref()],
         bump
     )]
@@ -131,6 +133,7 @@ pub struct Certify<'info> {
         payer = admin,
         associated_token::mint = certification_mint,
         associated_token::authority = manager,
+        associated_token::token_program = token_program,
     )]
     pub manager_to: InterfaceAccount<'info, TokenAccount>,
     pub associated_token_program: Program<'info, AssociatedToken>,

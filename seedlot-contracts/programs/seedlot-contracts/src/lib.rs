@@ -5,6 +5,7 @@ use anchor_spl::token_2022::Token2022;
 use anchor_spl::token_interface::{Mint, TokenAccount};
 
 mod certify;
+mod confirm;
 mod contract;
 mod errors;
 mod lots;
@@ -13,6 +14,7 @@ mod orders;
 mod utils;
 
 pub use certify::*;
+pub use confirm::*;
 pub use contract::*;
 pub use errors::*;
 pub use lots::*;
@@ -20,7 +22,7 @@ pub use offers::*;
 pub use orders::*;
 use utils::{init_mint, InitMint, InitMintBumps, MintMetadata};
 
-declare_id!("2oBmZcNPKhqV6T3tu2ytnp2cBYhjf6aedu5R9L14Vsyj");
+declare_id!("2zfu7HKSjPFJpi8Ga5EUdPXEQDoR3RV25xUuyFViqx5R");
 
 #[program]
 pub mod seedlot_contracts {
@@ -92,6 +94,16 @@ pub mod seedlot_contracts {
     ) -> Result<()> {
         lots::instructions::prepare_lots(ctx, order_index, order_quantity, manager_for_lot)
     }
+
+    pub fn confirm_lots(
+        ctx: Context<ConfirmLots>,
+        confirmed: bool,
+        order_index: u64,
+        lot_index: u64,
+    ) -> Result<()> {
+        confirm::instructions::confirm_lots(ctx, confirmed, order_index, lot_index)
+    }
+
     #[constant]
     pub const TOTAL_OFFERS: u64 = Offers::TOTAL_OFFERS;
 

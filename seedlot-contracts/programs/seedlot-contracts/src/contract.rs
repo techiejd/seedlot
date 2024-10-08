@@ -20,8 +20,10 @@ pub struct Contract {
     pub admin: Pubkey,
     pub trees_per_lot: u64,
     pub certification_mint: Pubkey,
+    // TODO(techiejd): Change to group https://solana.com/developers/courses/token-extensions/group-member
     pub offers_account: Pubkey,
     pub usdc_mint: Pubkey,
     pub usdc_token_account: Pubkey,
+    // TODO(techiejd): Change to group https://solana.com/developers/courses/token-extensions/group-member
     pub lots_account: Pubkey,
 }
