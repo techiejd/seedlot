@@ -5,7 +5,7 @@
  * IDL can be found at `target/idl/seedlot_contracts.json`.
  */
 export type SeedlotContracts = {
-  "address": "2oBmZcNPKhqV6T3tu2ytnp2cBYhjf6aedu5R9L14Vsyj",
+  "address": "2zfu7HKSjPFJpi8Ga5EUdPXEQDoR3RV25xUuyFViqx5R",
   "metadata": {
     "name": "seedlotContracts",
     "version": "0.1.0",
@@ -111,6 +111,7 @@ export type SeedlotContracts = {
         },
         {
           "name": "contract",
+          "writable": true,
           "pda": {
             "seeds": [
               {
@@ -147,41 +148,8 @@ export type SeedlotContracts = {
                 "path": "manager"
               },
               {
-                "kind": "const",
-                "value": [
-                  6,
-                  221,
-                  246,
-                  225,
-                  215,
-                  101,
-                  161,
-                  147,
-                  217,
-                  203,
-                  225,
-                  70,
-                  206,
-                  235,
-                  121,
-                  172,
-                  28,
-                  180,
-                  133,
-                  237,
-                  95,
-                  91,
-                  55,
-                  145,
-                  58,
-                  140,
-                  245,
-                  133,
-                  126,
-                  255,
-                  0,
-                  169
-                ]
+                "kind": "account",
+                "path": "tokenProgram"
               },
               {
                 "kind": "account",
@@ -252,6 +220,409 @@ export type SeedlotContracts = {
       ]
     },
     {
+      "name": "confirmLots",
+      "discriminator": [
+        44,
+        20,
+        135,
+        91,
+        149,
+        153,
+        23,
+        30
+      ],
+      "accounts": [
+        {
+          "name": "admin",
+          "signer": true,
+          "relations": [
+            "contract"
+          ]
+        },
+        {
+          "name": "contract",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  116,
+                  114,
+                  97,
+                  99,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "contract.admin",
+                "account": "contract"
+              }
+            ]
+          }
+        },
+        {
+          "name": "manager"
+        },
+        {
+          "name": "certificationMint",
+          "writable": true,
+          "relations": [
+            "contract"
+          ]
+        },
+        {
+          "name": "managerCertificationTokenAccount",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "manager"
+              },
+              {
+                "kind": "account",
+                "path": "tokenProgram"
+              },
+              {
+                "kind": "account",
+                "path": "certificationMint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "usdcMint",
+          "relations": [
+            "contract"
+          ]
+        },
+        {
+          "name": "contractUsdcTokenAccount",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "contract"
+              },
+              {
+                "kind": "account",
+                "path": "tokenProgramStandard"
+              },
+              {
+                "kind": "account",
+                "path": "usdcMint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "managerUsdcTokenAccount",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "manager"
+              },
+              {
+                "kind": "account",
+                "path": "tokenProgramStandard"
+              },
+              {
+                "kind": "account",
+                "path": "usdcMint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "tokenProgramStandard",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "associatedTokenProgram",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "lotsAccount",
+          "writable": true,
+          "relations": [
+            "contract"
+          ]
+        },
+        {
+          "name": "lotMint",
+          "writable": true
+        },
+        {
+          "name": "tokenProgram",
+          "address": "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"
+        },
+        {
+          "name": "user"
+        },
+        {
+          "name": "userLotTokenAccount",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "user"
+              },
+              {
+                "kind": "account",
+                "path": "tokenProgram"
+              },
+              {
+                "kind": "account",
+                "path": "lotMint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "systemProgram",
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "offersAccount",
+          "relations": [
+            "contract"
+          ]
+        },
+        {
+          "name": "orderMint",
+          "writable": true
+        },
+        {
+          "name": "userOrderTokenAccount",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "user"
+              },
+              {
+                "kind": "account",
+                "path": "tokenProgram"
+              },
+              {
+                "kind": "account",
+                "path": "orderMint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "confirmed",
+          "type": "bool"
+        },
+        {
+          "name": "orderIndex",
+          "type": "u64"
+        },
+        {
+          "name": "lotIndex",
+          "type": "u64"
+        }
+      ]
+    },
+    {
       "name": "decertify",
       "discriminator": [
         111,
@@ -274,6 +645,7 @@ export type SeedlotContracts = {
         },
         {
           "name": "contract",
+          "writable": true,
           "pda": {
             "seeds": [
               {
@@ -310,41 +682,8 @@ export type SeedlotContracts = {
                 "path": "manager"
               },
               {
-                "kind": "const",
-                "value": [
-                  6,
-                  221,
-                  246,
-                  225,
-                  215,
-                  101,
-                  161,
-                  147,
-                  217,
-                  203,
-                  225,
-                  70,
-                  206,
-                  235,
-                  121,
-                  172,
-                  28,
-                  180,
-                  133,
-                  237,
-                  95,
-                  91,
-                  55,
-                  145,
-                  58,
-                  140,
-                  245,
-                  133,
-                  126,
-                  255,
-                  0,
-                  169
-                ]
+                "kind": "account",
+                "path": "tokenProgram"
               },
               {
                 "kind": "account",
@@ -963,6 +1302,68 @@ export type SeedlotContracts = {
           }
         },
         {
+          "name": "certificationMint",
+          "relations": [
+            "contract"
+          ]
+        },
+        {
+          "name": "managerCertificationTokenAccount",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "manager"
+              },
+              {
+                "kind": "account",
+                "path": "tokenProgram"
+              },
+              {
+                "kind": "account",
+                "path": "certificationMint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
           "name": "offersAccount",
           "relations": [
             "contract"
@@ -1287,6 +1688,18 @@ export type SeedlotContracts = {
     {
       "code": 6010,
       "name": "lotsFull"
+    },
+    {
+      "code": 6011,
+      "name": "managerNotCertified"
+    },
+    {
+      "code": 6012,
+      "name": "invalidLotIndex"
+    },
+    {
+      "code": 6013,
+      "name": "lotMintMismatch"
     }
   ],
   "types": [

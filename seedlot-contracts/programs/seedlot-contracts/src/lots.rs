@@ -3,6 +3,7 @@ use anchor_spl::associated_token::AssociatedToken;
 use anchor_spl::token::Token;
 use anchor_spl::token_2022::Token2022;
 use anchor_spl::token_interface::{Mint, TokenAccount};
+use solana_program::program_option::COption;
 
 use crate::utils::{init_mint, InitMint, InitMintBumps, MintMetadata};
 use crate::{Contract, Offers, SeedlotContractsError};
@@ -13,6 +14,7 @@ pub mod instructions {
         price_cents_2_usdc, price_string_2_cents, BurnFrozenTokensFrom, BurnFrozenTokensFromBumps,
         MintFrozenTokensTo, MintFrozenTokensToBumps,
     };
+    use crate::CertificationTier;
 
     use super::*;
     use anchor_spl::associated_token::{create, Create};
@@ -24,6 +26,18 @@ pub mod instructions {
         lot_quantity: u64,
         manager_for_lot: String,
     ) -> Result<()> {
+        // Make sure the manager is certified
+        require_gt!(
+            ctx.accounts.manager_certification_token_account.amount,
+            0,
+            SeedlotContractsError::ManagerNotCertified
+        );
+        require_gt!(
+            CertificationTier::Decertified as u64,
+            ctx.accounts.manager_certification_token_account.amount,
+            SeedlotContractsError::ManagerNotCertified
+        );
+
         // Verify the order
         ctx.accounts
             .offers_account
@@ -42,8 +56,8 @@ pub mod instructions {
             Context::new(
                 ctx.program_id,
                 &mut &mut BurnFrozenTokensFrom {
-                    authority: ctx.accounts.user.clone(),
-                    contract: ctx.accounts.contract.clone(),
+                    authority: ctx.accounts.user.to_account_info(),
+                    contract: *ctx.accounts.contract.clone(),
                     mint: ctx.accounts.order_mint.clone(),
                     from: ctx.accounts.user_order_token_account.clone(),
                     associated_token_program: ctx.accounts.associated_token_program.clone(),
@@ -71,7 +85,7 @@ pub mod instructions {
                 ctx.program_id,
                 &mut InitMint {
                     payer: ctx.accounts.manager.clone(),
-                    contract: ctx.accounts.contract.clone(),
+                    contract: *ctx.accounts.contract.clone(),
                     mint: ctx.accounts.lot_mint.clone(),
                     rent: ctx.accounts.rent.clone(),
                     token_program: ctx.accounts.token_program.to_account_info(),
@@ -102,8 +116,8 @@ pub mod instructions {
             Context::new(
                 ctx.program_id,
                 &mut MintFrozenTokensTo {
-                    authority: ctx.accounts.user.clone(),
-                    contract: ctx.accounts.contract.clone(),
+                    authority: ctx.accounts.user.to_account_info(),
+                    contract: *ctx.accounts.contract.clone(),
                     mint: ctx.accounts.lot_mint.to_account_info(),
                     to: ctx.accounts.user_lot_token_account.to_account_info(),
                     associated_token_program: ctx.accounts.associated_token_program.clone(),
@@ -153,8 +167,7 @@ pub mod instructions {
 
 #[derive(Accounts)]
 pub struct PrepareLots<'info> {
-    /// CHECK: This account is used for getting the associated token address only.
-    pub user: AccountInfo<'info>,
+    pub user: SystemAccount<'info>,
     #[account(mut)]
     pub manager: Signer<'info>,
     #[account(
@@ -164,9 +177,19 @@ pub struct PrepareLots<'info> {
         has_one = offers_account,
         has_one = lots_account,
         has_one = usdc_mint,
-        constraint = contract.usdc_token_account.key() == contract_usdc_token_account.key(),
+        has_one = certification_mint,
     )]
-    pub contract: Account<'info, Contract>,
+    pub contract: Box<Account<'info, Contract>>,
+    #[account(
+        constraint = certification_mint.mint_authority == COption::Some(contract.key())
+    )]
+    pub certification_mint: Box<InterfaceAccount<'info, Mint>>,
+    #[account(
+        associated_token::mint = certification_mint,
+        associated_token::authority = manager,
+        associated_token::token_program = token_program,
+    )]
+    pub manager_certification_token_account: Box<InterfaceAccount<'info, TokenAccount>>,
     pub offers_account: AccountLoader<'info, Offers>,
     #[account(mut)]
     pub lots_account: AccountLoader<'info, Lots>,
@@ -191,7 +214,7 @@ pub struct PrepareLots<'info> {
         associated_token::authority = contract,
         associated_token::token_program = token_program_standard,
     )]
-    pub contract_usdc_token_account: InterfaceAccount<'info, TokenAccount>,
+    pub contract_usdc_token_account: Box<InterfaceAccount<'info, TokenAccount>>,
     #[account(
         init_if_needed,
         payer = manager,
@@ -199,7 +222,7 @@ pub struct PrepareLots<'info> {
         associated_token::authority = manager,
         associated_token::token_program = token_program_standard,
     )]
-    pub manager_usdc_token_account: InterfaceAccount<'info, TokenAccount>,
+    pub manager_usdc_token_account: Box<InterfaceAccount<'info, TokenAccount>>,
     pub associated_token_program: Program<'info, AssociatedToken>,
     pub token_program: Program<'info, Token2022>,
     pub token_program_standard: Program<'info, Token>,
@@ -247,6 +270,21 @@ impl Lots {
         require_neq!(self.tail, Self::TOTAL_LOTS, SeedlotContractsError::LotsFull);
         self.lots[self.tail as usize] = lot;
         self.tail += 1;
+        Ok(())
+    }
+
+    pub fn get(&self, index: u64) -> Result<Lot> {
+        require!(index < self.tail, SeedlotContractsError::InvalidLotIndex);
+        Ok(self.lots[index as usize])
+    }
+
+    pub fn remove(&mut self, index: u64) -> Result<()> {
+        // It's likely that we only remove a lot near the end of the array so not so expensive.
+        require!(index < self.tail, SeedlotContractsError::InvalidLotIndex);
+        for i in index..self.tail - 1 {
+            self.lots[i as usize] = self.lots[(i + 1) as usize];
+        }
+        self.tail -= 1;
         Ok(())
     }
 }

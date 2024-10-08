@@ -13,4 +13,7 @@ pub enum SeedlotContractsError {
     AdditionalMetadataIllFormed,
     InvalidPrice,
     LotsFull,
+    ManagerNotCertified,
+    InvalidLotIndex,
+    LotMintMismatch,
 }

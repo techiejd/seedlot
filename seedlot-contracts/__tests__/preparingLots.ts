@@ -21,9 +21,12 @@ import {
   TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";
 
-describe("Lots", () => {
+import { SendTransactionError } from "@solana/web3.js";
+
+describe("preparingLots", () => {
   let admin: anchor.web3.Keypair;
   let contractPK: anchor.web3.PublicKey;
+  let certificationMint: anchor.web3.Keypair;
   let offersAccount: anchor.web3.Keypair;
   let usdc: { mint: anchor.web3.PublicKey; authority: anchor.web3.Keypair };
   let contractUsdcTokenAccount: anchor.web3.PublicKey;
@@ -41,6 +44,7 @@ describe("Lots", () => {
       usdc,
       contractUsdcTokenAccount,
       lotsAccount,
+      certificationMint,
     } = await initialize());
     user = anchor.web3.Keypair.generate();
     await airdrop(user.publicKey);
@@ -119,8 +123,24 @@ describe("Lots", () => {
   // Client lot tokens should be frozen.
   // We want to check that the original_price of the lot is correct.
   // We want to check that the manager has received the payments for preparing the lot.
-  it("Allows manager to prepare a lot for a user", async () => {
+  it("Allows certified manager to prepare a lot for a user", async () => {
     const manager = anchor.web3.Keypair.generate();
+    // TODO(techiejd): Make sure manager can only prepare the amount of lots that the manager is certified for.
+    const certifyAccounts = {
+      admin: admin.publicKey,
+      manager: manager.publicKey,
+      contract: contractPK,
+      certificationMint: certificationMint.publicKey,
+      tokenProgram: TOKEN_2022_PROGRAM_ID,
+      associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+      systemProgram: anchor.web3.SystemProgram.programId,
+    };
+    await program.methods
+      .certify({ tier1: {} })
+      .accounts(certifyAccounts)
+      .signers([admin])
+      .rpc();
+
     const numLotsToPrepare = 3;
     const lotMint = anchor.web3.Keypair.generate();
     await airdrop(manager.publicKey);
@@ -157,19 +177,12 @@ describe("Lots", () => {
       lotMint: lotMint.publicKey,
       userLotTokenAccount,
       usdcMint: usdc.mint,
-      contractUsdcTokenAccount: contractUsdcTokenAccount,
+      certificationMint: certificationMint.publicKey,
       associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
       tokenProgram: TOKEN_2022_PROGRAM_ID,
       tokenProgramStandard: TOKEN_PROGRAM_ID,
       systemProgram: anchor.web3.SystemProgram.programId,
       rent: anchor.web3.SYSVAR_RENT_PUBKEY,
-    };
-    const lotMintMetadataInitial: MintMetadata = {
-      name: `Seedlot Lot - location variety ${manager.publicKey.toBase58()}`,
-      symbol: `SL`,
-      uri: `https://app.seedlot.io/lot/${manager.publicKey.toBase58()}`,
-      locationVarietyPrice: null,
-      managerForLot: manager.publicKey.toBase58(),
     };
 
     await program.methods
@@ -186,6 +199,7 @@ describe("Lots", () => {
       ])
       .signers([manager, lotMint])
       .rpc();
+
     // We want to check that the user still has the order tokens that the manager did not take.
     const userOrderTokenAccountAfter = await getOrCreateAssociatedTokenAccount(
       program.provider.connection,
