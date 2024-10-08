@@ -49,9 +49,9 @@ export const useCertify = (manager: PublicKey) => {
       .accounts(accounts)
       .instruction();
     const tx = await getVersionedTx([ix]);
-    const txHash = await wallet.signTransaction(tx);
-    const confirmedTx = await program.provider.sendAndConfirm(tx);
-    return await confirmTx(confirmedTx, program.provider.connection);
+    const signedTx = await wallet.signTransaction(tx);
+    const confirmedTx = await program.provider.sendAndConfirm(signedTx);
+    return confirmedTx;
   };
 
   return certify;
