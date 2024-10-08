@@ -21,6 +21,7 @@ export const useCertify = (manager: PublicKey) => {
   const signSendAndConfirmIxs = useSignSendAndConfirmIxs();
 
   const certify = async (tier: CertificationTier) => {
+    
     if (
       !program ||
       !contract ||
@@ -30,9 +31,12 @@ export const useCertify = (manager: PublicKey) => {
       !program.provider.sendAndConfirm
     ) {
       throw new Error(
-        `Program, contract, contract address, or wallet not set: ${JSON.stringify(
-          { program, contract, contractAddress, wallet }
-        )}`
+        `Program, contract, contract address, or wallet not set: ${{
+          program,
+          contract,
+          contractAddress,
+          wallet,
+        }}`
       );
     }
 
