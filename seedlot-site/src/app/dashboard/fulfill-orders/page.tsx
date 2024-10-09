@@ -1,5 +1,6 @@
 "use client";
 import {
+  LotAdditionalMetadata,
   TREES_PER_LOT,
   useProgramContext,
 } from "@/app/contexts/ProgramContext";
@@ -22,13 +23,6 @@ type LotToConfirm = {
   key: string;
   orderIndex: number;
   lotIndex: number;
-};
-
-type LotAdditionalMetadata = {
-  location: string;
-  variety: string;
-  manager: string; // base58
-  state: string; // 0 = unconfirmed, 1 = confirmed
 };
 
 const OrderConfirmationRow = ({

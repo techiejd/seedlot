@@ -48,8 +48,13 @@ const usePayHarvest = () => {
       tokenProgram: TOKEN_2022_PROGRAM_ID,
       systemProgram: SystemProgram.programId,
     };
+    console.log({ costOfHarvest, profit });
     const ix = await program.methods
-      .payHarvest(new BN(lotIndex), new BN(costOfHarvest), new BN(profit))
+      .payHarvest(
+        new BN(lotIndex),
+        new BN(costOfHarvest * 1000000),
+        new BN(profit * 1000000)
+      )
       .accounts(harvestAccounts)
       .instruction();
     return signSendAndConfirmIxs([ix]);

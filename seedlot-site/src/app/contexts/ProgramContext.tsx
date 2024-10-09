@@ -54,6 +54,12 @@ const CERTIFICATION_MINT_METADATA: MintMetadata = {
   locationVarietyPrice: null,
   managerForLot: null,
 };
+export type LotAdditionalMetadata = {
+  location: string;
+  variety: string;
+  manager: string; // base58
+  state: string; // 0 = unconfirmed, 1 = confirmed
+};
 
 export const useSignSendAndConfirmIxs = () => {
   const anchorWallet = useAnchorWallet();
