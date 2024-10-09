@@ -122,7 +122,7 @@ export const ProgramProvider: FC<
     const connection = new Connection("https://api.devnet.solana.com");
     const p = new AnchorProvider(connection, anchorWallet);
     setProvider(p);
-  }, []);
+  }, [anchorWallet]);
 
   const program = useMemo(() => {
     if (!provider) return;
@@ -328,5 +328,5 @@ export const confirmTx = async (
     blockhash: latestBlockHash.blockhash,
     lastValidBlockHeight: latestBlockHash.lastValidBlockHeight,
     signature: txHash,
-  });
+  });
 };

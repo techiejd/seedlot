@@ -7,6 +7,7 @@ import {
 } from "../contexts/ProgramContext";
 import { Keypair, SystemProgram, SYSVAR_RENT_PUBKEY } from "@solana/web3.js";
 import { TOKEN_2022_PROGRAM_ID } from "@solana/spl-token";
+import { useCallback } from "react";
 
 export type Offer = {
   location: string;
@@ -19,7 +20,7 @@ const useAddOffer = () => {
   const wallet = useAnchorWallet();
   const signSendAndConfirmIxs = useSignSendAndConfirmIxs();
 
-  const addOffer = async (offer: Offer) => {
+  const addOffer =  useCallback(async (offer: Offer) => {
     if (
       !program ||
       !contract ||
@@ -27,12 +28,12 @@ const useAddOffer = () => {
       !wallet?.publicKey ||
       !signSendAndConfirmIxs
     ) {
+      console.log({program, contract, contractAddress, wallet, signSendAndConfirmIxs});
       throw new Error(
-        `Program, contract, contract address, or wallet not set: ${JSON.stringify(
-          { program, contract, contractAddress, wallet }
-        )}`
+        `Program, contract, contract address, or wallet not set: ${ {program, contract, contractAddress, wallet, signSendAndConfirmIxs} }`
       );
     }
+
 
     const orderMintMetadata: MintMetadata = {
       name: `Seedlot Offer: ${offer.location} - ${offer.variety}`,
@@ -62,7 +63,8 @@ const useAddOffer = () => {
       .instruction();
 
     return signSendAndConfirmIxs([ix], [orderMint]);
-  };
+
+  }, [program, contract, contractAddress, wallet, signSendAndConfirmIxs]);
 
   return addOffer;
 };

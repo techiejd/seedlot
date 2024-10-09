@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useCallback } from "react";
 import { useProgramContext } from "@/app/contexts/ProgramContext";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { useUserContext } from "@/app/contexts/UserContext";
@@ -17,8 +17,8 @@ const AdminDashboard: React.FC = () => {
       console.log(await programContext.useInitialize());
     }
   };
-
-  const handleAddLotOffers = async () => {
+  console.log(programContext);
+  const handleAddLotOffers = useCallback(async () => {
     console.log("Creating Lot Offers");
     const response = await fetch("/api/offers", {
       method: "GET",
@@ -27,26 +27,26 @@ const AdminDashboard: React.FC = () => {
       },
     });
     const res = await response.json();
-    console.log({ offers: res.offers, res });
-    res.offers.forEach(
-      async (offer: {
-        location: string;
-        treeVarietal: string;
-        price: number;
-      }) => {
-        console.log("ready to add offers");
+    console.log(res.offers);
 
-        //  this should run
-        console.log(
-          await addOffer({
-            location: offer.location,
-            variety: offer.treeVarietal,
-            price: offer.price,
-          })
-        );
-      }
+    console.log(
+      await addOffer({
+        location: res.offers[2].location.toLowerCase(),
+        variety: res.offers[2].treeVarietal.toLowerCase(),
+        price: res.offers[2].price,
+      })
     );
-  };
+    // offer1: QHNLqTUczTqRnqrK31KsoFSHxthdL5stc1Zx85PGsU8xrcDYiTEKJ3PXrwgczqfe3GeBH3PXNbdq3DKx5zMKJa1
+    // offer2: 67UD5SgbpsbhWXpp6RCVox977iBX7MbD5qP6MsDKvyPrXna7Apaj5QtoZF5Sap2ZNRACJrr2U515xahh1LUbcJsS
+
+    // res.offers.forEach(async (offer: { location: string; treeVarietal: string; price:number } ) => {
+    //   console.log("ready to add offers");
+    //   console.log(offer);
+
+    //   //  this should run
+    //   // console.log(await addOffer({ location: offer.location.toLowerCase(), variety: offer.treeVarietal.toLowerCase(), price: offer.price }));
+    // });
+  }, [addOffer]);
 
   if (!userDetails) {
     return <div>Loading...</div>;
