@@ -1,10 +1,9 @@
 "use client";
-import React from "react";
+import React, { useCallback } from "react";
 import { useProgramContext } from "@/app/contexts/ProgramContext";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { useUserContext } from "@/app/contexts/UserContext";
 import useAddOffer from "@/app/hooks/useAddOffer";
-
 
 const AdminDashboard: React.FC = () => {
   const { userDetails } = useUserContext();
@@ -18,26 +17,36 @@ const AdminDashboard: React.FC = () => {
       console.log(await programContext.useInitialize());
     }
   };
-
-  const handleAddLotOffers = async () => {
+  console.log(programContext);
+  const handleAddLotOffers = useCallback(async () => {
     console.log("Creating Lot Offers");
-    const response = await fetch('/api/offers', {
-      method: 'GET',
+    const response = await fetch("/api/offers", {
+      method: "GET",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
     });
     const res = await response.json();
     console.log(res.offers);
-    res.offers.forEach(async (offer: { location: string; treeVarietal: string; price:number } ) => {
-      console.log("ready to add offers");
-     
-    
-      //  this should run
-      console.log(await addOffer({ location: offer.location, variety: offer.treeVarietal, price: offer.price }));
-    });
-  };
 
+    console.log(
+      await addOffer({
+        location: res.offers[2].location.toLowerCase(),
+        variety: res.offers[2].treeVarietal.toLowerCase(),
+        price: res.offers[2].price,
+      })
+    );
+    // offer1: QHNLqTUczTqRnqrK31KsoFSHxthdL5stc1Zx85PGsU8xrcDYiTEKJ3PXrwgczqfe3GeBH3PXNbdq3DKx5zMKJa1 
+    // offer2: 67UD5SgbpsbhWXpp6RCVox977iBX7MbD5qP6MsDKvyPrXna7Apaj5QtoZF5Sap2ZNRACJrr2U515xahh1LUbcJsS
+
+    // res.offers.forEach(async (offer: { location: string; treeVarietal: string; price:number } ) => {
+    //   console.log("ready to add offers");
+    //   console.log(offer);
+
+    //   //  this should run
+    //   // console.log(await addOffer({ location: offer.location.toLowerCase(), variety: offer.treeVarietal.toLowerCase(), price: offer.price }));
+    // });
+  }, [addOffer]);
 
   if (!userDetails) {
     return <div>Loading...</div>;
@@ -61,12 +70,12 @@ const AdminDashboard: React.FC = () => {
       <div className="mt-8">
         <h2 className="text-xl font-semibold">Add Lot Offers</h2>
         <div className="mt-4">
-        <button
-          onClick={handleAddLotOffers}
-          className="bg-blue-700 text-white rounded-lg px-4 py-2 border-none cursor-pointer"
-        >
-          Generate
-        </button>
+          <button
+            onClick={handleAddLotOffers}
+            className="bg-blue-700 text-white rounded-lg px-4 py-2 border-none cursor-pointer"
+          >
+            Generate
+          </button>
         </div>
       </div>
     </div>

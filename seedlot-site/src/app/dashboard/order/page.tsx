@@ -138,11 +138,6 @@ export default function OrderPage() {
     setLoading(true);
     setError(null);
     try {
-      // await placeOrder({
-      //   mintIndexInOffers: 0, // Index of the token offer
-      //   mint: new PublicKey("INSERT_MINT_ADDRESS_HERE"), // Replace with actual mint address
-      //   amount: numberOfLotsToPurchase, // Number of tokens you want to purchase
-      // });
 
       const response = await fetch('/api/offers', {
         method: 'GET',
@@ -165,12 +160,6 @@ export default function OrderPage() {
       }
 
       console.log("Selected Offer:", selectedOffer);
-
-      placeOrder({
-        mintIndexInOffers: 0,
-        mint: new PublicKey(selectedOffer.mintAddress),
-        amount: numberOfLotsToPurchase,
-      });
 
 
       alert("Order placed successfully!");
