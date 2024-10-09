@@ -9,7 +9,7 @@ export async function getAllFarms() {
             include: {
             TreesAtFarm: {
                 include: {
-                    treeVariety: true,
+                treeVariety: true,
                 },
             },
             },

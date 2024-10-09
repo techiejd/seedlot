@@ -6,7 +6,7 @@ import { useWallet } from "@solana/wallet-adapter-react";
 
 const treesPerLot = 100;
 const baseCostPerTree = 10;
-const baseReturnPerTreePerYear = 4;
+const baseReturnPerTreePerYear = 3.5;
 
 type TreeType = "SL795" | "Catuai" | "Typica" | "Liberica";
 
@@ -146,7 +146,7 @@ export default function OrderPage() {
         },
       });
       const res = await response.json();
-      console.log(res.offers);
+      console.log('response',res.offers);
 
       const offers = res.offers;
       const selectedOffer = offers.find(
@@ -160,7 +160,11 @@ export default function OrderPage() {
       }
 
       console.log("Selected Offer:", selectedOffer);
-
+      const order = placeOrder({
+        mintIndexInOffers: selectedOffer.mintIndex,
+        mint: selectedOffer.mintAddress,
+        amount: numberOfLotsToPurchase,
+      })
 
       alert("Order placed successfully!");
     } catch (err) {
@@ -326,11 +330,10 @@ export default function OrderPage() {
                   {annualReturn
                     .toFixed(0)
                     .replace(/\B(?=(\d{3})+(?!\d))/g, ",")}{" "}
-                  (after year 3)
+                  PA <br /><small>(after first harvest)</small>
                 </td>
                 <td className="px-4 py-2 text-left">
-                  {roi.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}% (over
-                  25 years)
+                  {roi.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}% <br /><small>(after first harvest)</small>
                 </td>
               </tr>
             </tbody>

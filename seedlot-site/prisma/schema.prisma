@@ -78,6 +78,7 @@ model TreesAtFarm {
   farmId       Int
   treeVarietyId Int
   mintAddress   String? @default("")
+  mintIndex   Int?
   farm         AvailableFarms @relation(fields: [farmId], references: [id])
   treeVariety  TreeVarieties  @relation(fields: [treeVarietyId], references: [id])
 

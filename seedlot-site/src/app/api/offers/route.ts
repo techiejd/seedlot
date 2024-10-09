@@ -5,7 +5,8 @@ interface Offer {
   location: string,
   treeVarietal: string,
   price: number,
-  mintAddress: string | null
+  mintAddress: string | null,
+  mintIndex: number | null
 }
 
 // Move this to DB
@@ -27,13 +28,12 @@ export async function GET(request: NextRequest) {
     const farms = await getAllFarms();
     const offers: Offer[] = [];
     farms.forEach((farm) => {
-      console.log(farm.name)
       farm.TreesAtFarm.forEach((tree) => {
+        if(!tree.mintAddress) return;
         const key = `${farm.name.toLowerCase()}-${tree.treeVariety.name.toLowerCase()}` as keyof typeof priceList;
-        offers.push({ location: farm.name, treeVarietal: tree.treeVariety.name, price: priceList[key], mintAddress: tree.mintAddress});
+        offers.push({ location: farm.name, treeVarietal: tree.treeVariety.name, price: priceList[key], mintAddress: tree.mintAddress, mintIndex : tree.mintIndex });
       });
     })
-    console.log(offers)
 
     return new NextResponse(JSON.stringify({ offers }), { status: 200 });
   } catch (error) {

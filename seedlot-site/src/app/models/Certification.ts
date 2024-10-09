@@ -11,7 +11,7 @@ type Certification = {
   createdAt: Date;
 };
 
-export async function get(userId: number) {
+export async function getCertificationByUserId(userId: number) {
   let certification;
 
   try {

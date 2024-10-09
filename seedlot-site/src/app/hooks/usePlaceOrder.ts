@@ -65,7 +65,7 @@ const usePlaceOrder = () => {
     return await signSendAndConfirmIxs([ix]);
   };
 
-  return { placeOrder };
+  return placeOrder;
 };
 
 export default usePlaceOrder;
