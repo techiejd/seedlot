@@ -68,6 +68,11 @@ const menuItems: { [key in Role]: MenuItem[] } = {
   admin: [
     ...commonMenuItems,
     {
+      name: "Distribute Harvest",
+      href: "/dashboard/distribute-harvest",
+      icon: "icon here"
+    },
+    {
       name: "Fulfill Orders",
       href: "/dashboard/fulfill-orders",
       icon: "icon here"

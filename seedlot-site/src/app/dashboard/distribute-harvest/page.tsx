@@ -1,22 +1,22 @@
 "use client"
-import { verify } from "crypto";
 import { useState } from "react";
 
-export default function OrdersAvailablePage() {
+export default function DistributeHarvestPage() {
     const [orderStatus, setOrderStatus] = useState("");
 
-    const handleVerifyOrderPlanted = async () => {
-        setOrderStatus("verified");
-    }
-    const handleFulfillOrder = async () => {
-        setOrderStatus("fulfilled");
+    const handleDistributeFunds = () => {
+
+        // Investor = 50% 
+        // Manager = 25%
+        // Seedlot = 25%
+        setOrderStatus("distributed");
     }
 
     return (
       <div className="space-y-12 px-8">
   
       <div className="border-b border-gray-900/10 pb-12">
-        <h1 className="text-4xl font-bold">Orders Ready To Be Fulfilled</h1>
+        <h1 className="text-4xl font-bold">Lot Harvests Ready For Distribution</h1>
       </div>
       
       <div className="flex flex-col w-full">
@@ -25,13 +25,13 @@ export default function OrdersAvailablePage() {
             <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
               <tr>
                 <th scope="col" className="px-6 py-3">
-                  Farm
+                  Order/Lots Number
                 </th>
                 <th scope="col" className="px-6 py-3">
-                  Investor
+                  Investor Name
                 </th>
                 <th scope="col" className="px-6 py-3">
-                  Lots
+                  Manager Name
                 </th>
                 <th scope="col" className="px-6 py-3">
                   Action
@@ -44,34 +44,25 @@ export default function OrdersAvailablePage() {
                   scope="row"
                   className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white"
                 >
-                  Toraja
+                  Toraja - #1024
                 </th>
                 <td className="px-6 py-4">Intuitive Global PTE</td>
-                <td className="px-6 py-4">10</td>
+                <td className="px-6 py-4">Ketut</td>
                 <td className="px-6 py-4">
                 {orderStatus &&
-                    orderStatus == "unverified" && (
+                    orderStatus == "undestributed" && (
                     <button
-                        onClick={() => handleVerifyOrderPlanted()}
+                        onClick={() => handleDistributeFunds()}
                         disabled
                         className="px-4 py-2 red text-white rounded hover:bg-blue-700"
                     >
-                        Verify Order
+                        Distribute Funds
                     </button>
                     )}
-                {orderStatus &&
-                    orderStatus == "verified" && (
-                    <button
-                        onClick={() => handleFulfillOrder()}
-                        disabled
-                        className="px-4 py-2 red text-white rounded hover:bg-blue-700"
-                    >
-                        Fulfill Order
-                    </button>
-                    )}
-                    {orderStatus &&
-                    orderStatus == "fulfilled" && (
-                        <span>Order Fulfilled to: {"xyz"}</span>
+                    {orderStatus === "distributed" && (
+                        <span className="px-2 py-1 text-xs font-semibold leading-tight text-green-700 bg-green-100 rounded-full">
+                            Harvest Distributed
+                        </span>
                     )}
               
                 </td>
