@@ -98,14 +98,19 @@ export const useDecertify = (manager: PublicKey) => {
   return decertify;
 };
 
-export const useManagerCertificationTier = (manager: PublicKey) => {
+export const useCertificationNumber = (manager: PublicKey) => {
   const managerAta = useManagerCertificationAta(manager);
   const { program, contract } = useProgramContext();
-  const [certificationTier, setCertificationTier] = useState<
-    CertificationTier | undefined
+  const [certificationNumber, setCertificationNumber] = useState<
+    number | undefined | "loading"
   >();
+  const [loading, setLoading] = useState(false);
   useEffect(() => {
-    if (!managerAta || !program || !contract?.certificationMint) return;
+    console.log({ managerAta, program, contract });
+    if (!managerAta || !program || !contract?.certificationMint || loading)
+      return;
+    setLoading(true);
+    setCertificationNumber("loading");
     getAccount(
       program.provider.connection,
       managerAta,
@@ -114,31 +119,48 @@ export const useManagerCertificationTier = (manager: PublicKey) => {
     )
       .then((account) => {
         const tierNumber = account.amount;
-        setCertificationTier(
-          (() => {
-            switch (tierNumber) {
-              case 0n:
-                return { undefined: {} };
-              case 1n:
-                return { tier1: {} };
-              case 2n:
-                return { tier2: {} };
-              case 3n:
-                return { tier3: {} };
-              case 4n:
-                return { tier4: {} };
-              case 5n:
-                return { decertified: {} };
-              default:
-                return undefined;
-            }
-          })()
-        );
+        setCertificationNumber(Number(tierNumber));
       })
       .catch((error) => {
         console.error(error);
-        return undefined;
+        setCertificationNumber(undefined);
       });
-  }, [managerAta, program, contract?.certificationMint]);
-  return certificationTier;
+  }, [managerAta, program, contract?.certificationMint, contract, loading]);
+  return certificationNumber;
+};
+
+export const useManagerCertificationTier = (manager: PublicKey) => {
+  const certificationNumber = useCertificationNumber(manager);
+  if (certificationNumber == "loading") {
+    return "loading";
+  }
+  return certificationNumber
+    ? convertToCertificationTier(Number(certificationNumber))
+    : undefined;
+};
+
+enum ClientCertificationTierMirror {
+  undefined = 0,
+  tier1 = 1,
+  tier2 = 2,
+  tier3 = 3,
+  tier4 = 4,
+  decertified = 5,
+}
+
+const numberToClientCertificationTierMirror: { [key: number]: string } = {};
+for (const key in ClientCertificationTierMirror) {
+  if (typeof ClientCertificationTierMirror[key] === "number") {
+    numberToClientCertificationTierMirror[ClientCertificationTierMirror[key]] =
+      key;
+  }
+}
+
+export const convertToCertificationTier = (tier: number) => {
+  if (tier in numberToClientCertificationTierMirror) {
+    return {
+      [numberToClientCertificationTierMirror[tier]]: {},
+    } as unknown as CertificationTier;
+  }
+  return undefined;
 };

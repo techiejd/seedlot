@@ -1,7 +1,11 @@
 "use client";
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, Fragment } from "react";
 import { User } from "@/app/models/User";
-import { useCertify, useManagerCertificationTier } from "@/app/hooks/useCertify";
+import {
+  useCertificationNumber,
+  useCertify,
+  useManagerCertificationTier,
+} from "@/app/hooks/useCertify";
 import { PublicKey } from "@solana/web3.js";
 
 // Add deny button
@@ -16,39 +20,102 @@ type Certificate = {
 };
 
 const ApproveButton = ({ managerPK }: { managerPK: string }) => {
-
   console.log("managerPK", managerPK);
-  
-  const certify = useCertify(new PublicKey(managerPK))
 
-  return (
-    <button
-      onClick={() => certify({ tier1: {} })}
-      className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-700"
-    >
-      Approve
-    </button>
+  const certify = useCertify(new PublicKey(managerPK));
+  const managerCertificationTier = useManagerCertificationTier(
+    new PublicKey(managerPK)
+  );
+  const managerCertificationNumber = useCertificationNumber(
+    new PublicKey(managerPK)
+  );
+
+  return managerCertificationNumber == "loading" ? (
+    <>Loading ...</>
+  ) : (
+    <div className="flex flex-col justify-center space-y-4">
+      {managerCertificationTier &&
+        managerCertificationTier != "loading" &&
+        managerCertificationTier.decertified && (
+          <button
+            onClick={() => certify({ tier1: {} })}
+            disabled
+            className="px-4 py-2 red text-white rounded hover:bg-blue-700"
+          >
+            Approve to{" "}
+            {managerCertificationNumber == undefined
+              ? "Tier 1"
+              : `Tier ${managerCertificationNumber + 1}`}
+          </button>
+        )}
+      {(managerCertificationNumber == undefined ||
+        managerCertificationNumber == 0) && (
+        <Fragment>
+          <button
+            onClick={() => certify({ tier1: {} })}
+            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-700"
+          >
+            Approve to{" "}
+            {managerCertificationNumber == undefined
+              ? "Tier 1"
+              : `Tier ${managerCertificationNumber + 1}`}
+          </button>
+          <button
+            onClick={() => certify({ decertified: {} })}
+            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-700"
+          >
+            Deny
+          </button>
+        </Fragment>
+      )}
+      {(managerCertificationNumber !== undefined ||
+        managerCertificationNumber !== 0) && (
+        <Fragment>
+          <button
+            onClick={() => certify({ tier1: {} })}
+            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-700"
+          >
+            Approve to {`Tier ${managerCertificationNumber! + 1}`}
+          </button>
+          <button
+            onClick={() => certify({ decertified: {} })}
+            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-700"
+          >
+            Decertify
+          </button>
+        </Fragment>
+      )}
+    </div>
   );
 };
 
 const StatusBadge = ({ managerPK }: { managerPK: string }) => {
-  const managerCertificationTier = useManagerCertificationTier(new PublicKey(managerPK));
+  const managerCertificationTier = useManagerCertificationTier(
+    new PublicKey(managerPK)
+  );
+
   return (
     <span
       className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-        managerCertificationTier?.undefined || managerCertificationTier == undefined
+        managerCertificationTier == undefined ||
+        managerCertificationTier == "loading" ||
+        managerCertificationTier.undefined
           ? "bg-yellow-100 text-yellow-800"
           : "bg-green-100 text-green-800"
       }`}
     >
-      {managerCertificationTier?.undefined || managerCertificationTier == undefined ? "Pending" : Object.keys(managerCertificationTier)[0]}
+      {managerCertificationTier == "loading"
+        ? "Pending"
+        : managerCertificationTier == undefined ||
+          managerCertificationTier.undefined
+        ? "Error"
+        : Object.keys(managerCertificationTier)[0]}
     </span>
   );
-}
+};
 
 export default function PendingCertificationsPage() {
   const [certifications, setCertifications] = useState<Certificate[]>([]);
- 
 
   useEffect(() => {
     const fetchCerts = async () => {
@@ -159,4 +226,3 @@ export default function PendingCertificationsPage() {
 function useAta() {
   throw new Error("Function not implemented.");
 }
-
