@@ -5,7 +5,6 @@ import { useWallet } from "@solana/wallet-adapter-react";
 import { useUserContext } from "@/app/contexts/UserContext";
 import useAddOffer from "@/app/hooks/useAddOffer";
 
-
 const AdminDashboard: React.FC = () => {
   const { userDetails } = useUserContext();
   const { publicKey } = useWallet();
@@ -21,23 +20,33 @@ const AdminDashboard: React.FC = () => {
 
   const handleAddLotOffers = async () => {
     console.log("Creating Lot Offers");
-    const response = await fetch('/api/offers', {
-      method: 'GET',
+    const response = await fetch("/api/offers", {
+      method: "GET",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
     });
     const res = await response.json();
-    console.log(res.offers);
-    res.offers.forEach(async (offer: { location: string; treeVarietal: string; price:number } ) => {
-      console.log("ready to add offers");
-     
-    
-      //  this should run
-      console.log(await addOffer({ location: offer.location, variety: offer.treeVarietal, price: offer.price }));
-    });
-  };
+    console.log({ offers: res.offers, res });
+    res.offers.forEach(
+      async (offer: {
+        location: string;
+        treeVarietal: string;
+        price: number;
+      }) => {
+        console.log("ready to add offers");
 
+        //  this should run
+        console.log(
+          await addOffer({
+            location: offer.location,
+            variety: offer.treeVarietal,
+            price: offer.price,
+          })
+        );
+      }
+    );
+  };
 
   if (!userDetails) {
     return <div>Loading...</div>;
@@ -61,12 +70,12 @@ const AdminDashboard: React.FC = () => {
       <div className="mt-8">
         <h2 className="text-xl font-semibold">Add Lot Offers</h2>
         <div className="mt-4">
-        <button
-          onClick={handleAddLotOffers}
-          className="bg-blue-700 text-white rounded-lg px-4 py-2 border-none cursor-pointer"
-        >
-          Generate
-        </button>
+          <button
+            onClick={handleAddLotOffers}
+            className="bg-blue-700 text-white rounded-lg px-4 py-2 border-none cursor-pointer"
+          >
+            Generate
+          </button>
         </div>
       </div>
     </div>

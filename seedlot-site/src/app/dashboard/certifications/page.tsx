@@ -5,6 +5,7 @@ import {
   convertToCertificationTier,
   useCertificationNumber,
   useCertify,
+  useDecertify,
   useManagerCertificationTier,
 } from "@/app/hooks/useCertify";
 import { PublicKey } from "@solana/web3.js";
@@ -25,6 +26,7 @@ const ApproveButton = ({ managerPK }: { managerPK: string }) => {
   console.log("managerPK", managerPK);
 
   const certify = useCertify(new PublicKey(managerPK));
+  const decertify = useDecertify(new PublicKey(managerPK));
   const managerCertificationTier = useManagerCertificationTier(
     new PublicKey(managerPK)
   );
@@ -89,7 +91,7 @@ const ApproveButton = ({ managerPK }: { managerPK: string }) => {
             Approve to {`Tier ${managerCertificationNumber! + 1}`}
           </button>
           <button
-            onClick={() => certify({ decertified: {} })}
+            onClick={decertify}
             className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-700"
           >
             Decertify
