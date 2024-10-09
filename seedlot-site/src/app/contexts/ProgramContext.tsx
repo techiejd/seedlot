@@ -75,6 +75,7 @@ export const useSignSendAndConfirmIxs = () => {
     const tx = new VersionedTransaction(message);
     tx.sign(signers);
     const walletSignedTx = await anchorWallet.signTransaction(tx);
+    console.log("walletSignedTx", walletSignedTx);
     return await program.provider.sendAndConfirm!(walletSignedTx);
   };
 
@@ -328,5 +329,5 @@ export const confirmTx = async (
     blockhash: latestBlockHash.blockhash,
     lastValidBlockHeight: latestBlockHash.lastValidBlockHeight,
     signature: txHash,
-  });
+  });
 };
