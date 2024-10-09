@@ -12,7 +12,6 @@ import React, {
 import {
   Program,
   AnchorProvider,
-  setProvider,
   IdlTypes,
   IdlAccounts,
   web3,
@@ -119,7 +118,6 @@ export const ProgramProvider: FC<
 
   useEffect(() => {
     // TODO: FIGURE OUT WHY THIS ANCHOR WALLET IS NOT LOADING
-    console.log("Anchor Wallet", anchorWallet);
     if (!anchorWallet) return;
     const connection = new Connection("https://api.devnet.solana.com");
     const p = new AnchorProvider(connection, anchorWallet);
@@ -135,30 +133,6 @@ export const ProgramProvider: FC<
   }, [provider]);
 
   const signSendAndConfirmIxs = useSignSendAndConfirmIxs();
-
-  const loadContract = useCallback(
-    async (contractAddress: PublicKey) => {
-      if (!program) throw new Error("Program not initialized");
-      if (contractAddress != _contractAddress) {
-        setContractAddress(contractAddress);
-      }
-      const contract = await program.account.contract.fetch(contractAddress);
-      setContract(contract);
-      return contract;
-    },
-    [program, _contractAddress]
-  );
-
-  useEffect(() => {
-    // TODO: FIGURE OUT WHY THE LOAD CONTRACT IS NOT WORKING
-    console.log(provider, program, contractPK);
-    if (!provider) return;
-    if (!program) return;
-    if (!contractPK) return;
-    console.log("Loading contract", contractPK);
-    console.log("PublicKey contract", new PublicKey(contractPK));
-    loadContract(new PublicKey(contractPK));
-  }, [contractPK, loadContract, program, provider]);
 
   const initialize = useCallback(
     // If no usdcMint is provided, the program will create a new mint, meant for development.
@@ -231,7 +205,6 @@ export const ProgramProvider: FC<
         [Buffer.from("contract"), anchorWallet.publicKey.toBuffer()],
         program.programId
       );
-      setContractAddress(contractPK);
       const contractUsdcTokenAccount = getAssociatedTokenAddressSync(
         _usdcMint,
         contractPK,
@@ -276,12 +249,6 @@ export const ProgramProvider: FC<
         .accounts(accounts)
         .instruction();
 
-      console.log("Cert Mint", certificationMint.publicKey.toBase58());
-      console.log("Anchor wallet", anchorWallet?.publicKey.toBase58());
-      console.log("Usdc key", _usdcMintKeyPair.publicKey.toBase58());
-      console.log("Offers Account", offersAccount.publicKey.toBase58());
-      console.log("Lots Account", lotsAccount.publicKey.toBase58());
-
       await signSendAndConfirmIxs(
         [
           createOffersAccountInstruction,
@@ -291,39 +258,57 @@ export const ProgramProvider: FC<
         ],
         [offersAccount, lotsAccount, _usdcMintKeyPair, certificationMint]
       );
-      return loadContract(contractPK);
+      const contract = await program.account.contract.fetch(contractPK);
+      setContractAddress(contractPK);
+      return contract;
     },
-    [program, anchorWallet, signSendAndConfirmIxs, loadContract]
+    [program, anchorWallet, signSendAndConfirmIxs]
   );
 
+  const contractAddress = useMemo(() => _contractAddress, [_contractAddress]);
   useEffect(() => {
-    if (!_contract || !program) return;
+    const loadContract = async () => {
+      if (!program || !contractAddress) return;
+      const contract = await program.account.contract.fetch(contractAddress);
+      setContract(contract);
+    };
+    loadContract();
+  }, [contractAddress, program]);
+
+  const memomizedLotsAddress = useMemo(
+    () => _contract?.lotsAccount,
+    [_contract]
+  );
+  useEffect(() => {
+    if (!memomizedLotsAddress || !program) return;
     const loadLots = async () => {
-      const lots = await program.account.lots.fetch(_contract.lotsAccount);
+      if (!memomizedLotsAddress) return;
+      const lots = await program.account.lots.fetch(memomizedLotsAddress);
       setLots(lots);
     };
     loadLots();
-  }, [_contract, program]);
+  }, [memomizedLotsAddress, program]);
 
+  const memomizedOffersAddress = useMemo(
+    () => _contract?.offersAccount,
+    [_contract]
+  );
   useEffect(() => {
-    if (!_contract || !program) return;
+    if (!memomizedOffersAddress || !program) return;
     const loadOffers = async () => {
-      const offers = await program.account.offers.fetch(
-        _contract.offersAccount
-      );
+      const offers = await program.account.offers.fetch(memomizedOffersAddress);
       setOffers(offers);
     };
     loadOffers();
-  }, [_contract, program]);
+  }, [memomizedOffersAddress, program]);
 
   return (
     <ProgramContext.Provider
       value={{
         program,
         contract: _contract,
-        contractAddress: _contractAddress,
+        contractAddress,
         useInitialize: initialize,
-        useLoadContract: loadContract,
         lots,
         offers,
       }}
