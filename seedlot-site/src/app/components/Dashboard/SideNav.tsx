@@ -68,6 +68,11 @@ const menuItems: { [key in Role]: MenuItem[] } = {
   admin: [
     ...commonMenuItems,
     {
+      name: "Distribute Harvest",
+      href: "/dashboard/distribute-harvest",
+      icon: "icon here"
+    },
+    {
       name: "Fulfill Orders",
       href: "/dashboard/fulfill-orders",
       icon: "icon here"
@@ -129,15 +134,15 @@ const SideNav = () => {
       <ul className="list-none p-0">
         {items.map((item) => (
           <li key={item.name} className={`mb-2 h-8 ${item.href === "/" ? "mt-8 rounded bg-green-800" : ""}`}>
-        <Link
-          href={item.href}
-          className={`flex items-center p-2 rounded ${
-            pathname === item.href ? "bg-gray-700" : item.href === "/" ? "bg-green-800" : "bg-transparent"
-          } text-gray-300 no-underline`}
-        >
-          {/* <span className="mr-1 w-[20px]">{item.icon}</span> */}
-          {item.name}
-        </Link>
+            <Link
+              href={item.href}
+              className={`flex items-center p-2 rounded ${
+                pathname === item.href ? "bg-gray-700" : item.href === "/" ? "bg-green-800" : "bg-transparent"
+              } text-gray-300 no-underline`}
+            >
+              {/* <span className="mr-1 w-[20px]">{item.icon}</span> */}
+              {item.name}
+            </Link>
           </li>
         ))}
       </ul>
