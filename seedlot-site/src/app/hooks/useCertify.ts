@@ -107,7 +107,7 @@ export const useManagerCertificationTier = (manager: PublicKey) => {
   useEffect(() => {
     if (!managerAta || !program || !contract?.certificationMint) return;
     getAccount(
-      program.provider.connection as unknown as Connection,
+      program.provider.connection,
       managerAta,
       undefined,
       TOKEN_2022_PROGRAM_ID

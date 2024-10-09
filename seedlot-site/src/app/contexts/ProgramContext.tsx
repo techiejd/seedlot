@@ -29,6 +29,7 @@ import {
   TransactionInstruction,
   VersionedTransaction,
   Signer,
+  TransactionMessage,
 } from "@solana/web3.js";
 import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
@@ -65,14 +66,15 @@ export const useSignSendAndConfirmIxs = () => {
     instructions: TransactionInstruction[],
     signers: Signer[] = []
   ) => {
-    const message = new web3.TransactionMessage({
+    const message = new TransactionMessage({
       payerKey: anchorWallet.publicKey!,
       recentBlockhash: (await program.provider.connection.getLatestBlockhash())
         .blockhash,
       instructions,
     }).compileToV0Message();
 
-    const tx = new VersionedTransaction(message).sign(signers);
+    const tx = new VersionedTransaction(message);
+    tx.sign(signers);
     const walletSignedTx = await anchorWallet.signTransaction(tx);
     return await program.provider.sendAndConfirm!(walletSignedTx);
   };
