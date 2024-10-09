@@ -56,3 +56,5 @@ const usePayHarvest = () => {
   };
   return payHarvest;
 };
+
+export default usePayHarvest;

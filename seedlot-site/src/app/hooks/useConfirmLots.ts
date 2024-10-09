@@ -4,7 +4,7 @@ import {
   useSignSendAndConfirmIxs,
 } from "../contexts/ProgramContext";
 import { BN } from "@coral-xyz/anchor";
-import { PublicKey } from "@solana/web3.js";
+import { PublicKey, SystemProgram } from "@solana/web3.js";
 import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
   TOKEN_2022_PROGRAM_ID,
@@ -43,7 +43,7 @@ const useConfirmLots = () => {
     const confirmAccounts = {
       admin: wallet.publicKey,
       contract: contractAddress,
-      manager: manager.publicKey,
+      manager: manager,
       certificationMint: contract.certificationMint,
       usdcMint: contract.usdcMint,
       tokenProgramStandard: TOKEN_PROGRAM_ID,
