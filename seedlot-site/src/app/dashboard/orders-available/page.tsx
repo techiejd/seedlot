@@ -67,13 +67,15 @@ export default function OrdersPage() {
         user: new PublicKey(onlyClientPk), // TODO(techiejd): Really should change all 'user' to 'client'
       },
     });
+    const numLotsToPrepare = Number(quantity);
     await prepareLots({
       orderMintIndex: torajaCatuiMintIdx,
-      numLotsToPrepare: Number(quantity),
+      numLotsToPrepare,
       orderMint: new PublicKey(torajaCatui.mint),
       user: new PublicKey(onlyClientPk), // TODO(techiejd): Really should change all 'user' to 'client'
     });
     setLoading(false);
+    setPrice(price - numLotsToPrepare);
   };
   return (
     <div className="space-y-12 px-8">
