@@ -21,17 +21,21 @@ const AdminDashboard: React.FC = () => {
 
   const handleAddLotOffers = async () => {
     console.log("Creating Lot Offers");
-    const response = await fetch('/api/farms', {
+    const response = await fetch('/api/offers', {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
       },
     });
-    const farms = await response.json();
-    console.log(farms);
-    // addOffer({}).then((res) => {
-    //   console.log(res);
-    // });
+    const res = await response.json();
+    console.log(res.offers);
+    res.offers.forEach(async (offer: { location: string; treeVarietal: string; price:number } ) => {
+      console.log("ready to add offers");
+     
+    
+      //  this should run
+      console.log(await addOffer({ location: offer.location, variety: offer.treeVarietal, price: offer.price }));
+    });
   };
 
 
@@ -44,7 +48,7 @@ const AdminDashboard: React.FC = () => {
   }
   return (
     <div className="pl-8">
-      <div className="pl-8">
+      <div>
         <h1 className="text-2xl mb-4 font-bold">Admin Dashboard</h1>
         <button
           onClick={handleInitializeProgram}
@@ -61,7 +65,7 @@ const AdminDashboard: React.FC = () => {
           onClick={handleAddLotOffers}
           className="bg-blue-700 text-white rounded-lg px-4 py-2 border-none cursor-pointer"
         >
-          Create
+          Generate
         </button>
         </div>
       </div>

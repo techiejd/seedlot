@@ -25,6 +25,13 @@ interface Location {
   image: string;
 }
 
+interface Offer {
+  location: string,
+  treeVarietal: string,
+  price: number,
+  mintAddress: string
+}
+
 const lotInfo: {
   [key in "toraja" | "kintamani" | "sarawak"]: Array<Location>;
 } = {
@@ -111,6 +118,7 @@ export default function OrderPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const wallet = useWallet();
+  const placeOrder = usePlaceOrder();
 
   // Handlers
   const handleFarmChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
@@ -118,6 +126,7 @@ export default function OrderPage() {
     setSelectedFarm(newFarm);
     setMaxLots(lotInfo[newFarm][0].lotsPerOrder);
   };
+
 
 
   const handlePlaceOrder = async () => {
@@ -134,6 +143,36 @@ export default function OrderPage() {
       //   mint: new PublicKey("INSERT_MINT_ADDRESS_HERE"), // Replace with actual mint address
       //   amount: numberOfLotsToPurchase, // Number of tokens you want to purchase
       // });
+
+      const response = await fetch('/api/offers', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      const res = await response.json();
+      console.log(res.offers);
+
+      const offers = res.offers;
+      const selectedOffer = offers.find(
+        (offer: Offer) =>
+          offer.treeVarietal.toLowerCase() === selectedTreeType.toLowerCase() &&
+          offer.location.toLowerCase() === selectedFarm.toLowerCase()
+      );
+
+      if (!selectedOffer) {
+        throw new Error("No matching offer found.");
+      }
+
+      console.log("Selected Offer:", selectedOffer);
+
+      placeOrder({
+        mintIndexInOffers: 0,
+        mint: new PublicKey(selectedOffer.mintAddress),
+        amount: numberOfLotsToPurchase,
+      });
+
+
       alert("Order placed successfully!");
     } catch (err) {
       console.error("Failed to place order:", err);
