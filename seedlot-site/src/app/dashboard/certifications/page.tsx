@@ -2,11 +2,13 @@
 import React, { useState, useMemo, useEffect, Fragment } from "react";
 import { User } from "@/app/models/User";
 import {
+  convertToCertificationTier,
   useCertificationNumber,
   useCertify,
   useManagerCertificationTier,
 } from "@/app/hooks/useCertify";
 import { PublicKey } from "@solana/web3.js";
+import { CertificationTier } from "@/app/contexts/ProgramContext";
 
 // Add deny button
 // and revoke button
@@ -72,7 +74,16 @@ const ApproveButton = ({ managerPK }: { managerPK: string }) => {
         managerCertificationNumber !== 0) && (
         <Fragment>
           <button
-            onClick={() => certify({ tier1: {} })}
+            onClick={() => {
+              if (managerCertificationNumber == undefined) {
+                throw new Error("Should not call while loading");
+              }
+              certify(
+                convertToCertificationTier(
+                  managerCertificationNumber! + 1
+                ) as CertificationTier
+              );
+            }}
             className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-700"
           >
             Approve to {`Tier ${managerCertificationNumber! + 1}`}
