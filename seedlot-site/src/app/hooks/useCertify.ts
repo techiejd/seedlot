@@ -4,7 +4,7 @@ import {
   useProgramContext,
   useSignSendAndConfirmIxs,
 } from "../contexts/ProgramContext";
-import { PublicKey, SystemProgram } from "@solana/web3.js";
+import { Connection, PublicKey, SystemProgram } from "@solana/web3.js";
 import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
   getAccount,
@@ -20,7 +20,6 @@ export const useCertify = (manager: PublicKey) => {
   const signSendAndConfirmIxs = useSignSendAndConfirmIxs();
 
   const certify = async (tier: CertificationTier) => {
-    
     if (
       !program ||
       !contract ||
@@ -108,7 +107,7 @@ export const useManagerCertificationTier = (manager: PublicKey) => {
   useEffect(() => {
     if (!managerAta || !program || !contract?.certificationMint) return;
     getAccount(
-      program.provider.connection,
+      program.provider.connection as unknown as Connection,
       managerAta,
       undefined,
       TOKEN_2022_PROGRAM_ID
