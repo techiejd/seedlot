@@ -27,7 +27,7 @@ export default function ApplyManagerPage() {
           console.log(data.certifications);
           if (data.certifications) {
             setCertificationInProgress(true);
-            setCertificationStatus(data.certifications.status);
+            setCertificationStatus("approved");
           }
         })
         .catch((error) => {
@@ -74,7 +74,7 @@ export default function ApplyManagerPage() {
   return (
     <div className="space-y-12 px-8">
       <div className="pb-8">
-        <h1 className="text-4xl font-bold">Tier 1 Manager Application</h1>
+        <h1 className="text-4xl font-bold">Manager Application for Certification</h1>
       </div>
       {loading ? (
         <svg
@@ -99,11 +99,17 @@ export default function ApplyManagerPage() {
         </svg>
       ) : certificationInProgress ? (
         <div
-          className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4"
+          className={`p-4 border-l-4 ${
+            certificationStatus === "pending"
+              ? "bg-yellow-100 border-yellow-500 text-yellow-700"
+              : certificationStatus === "approved"
+              ? "bg-green-100 border-green-500 text-green-700"
+              : ""
+          }`}
           role="alert"
         >
           <p className="font-bold">Certification Application Status</p>
-          <p>{certificationStatus}</p>
+          <p>{certificationStatus} - Tier 2</p>
         </div>
       ) : (
         <form

@@ -43,19 +43,19 @@ const lotInfo: {
       trees: [
         {
           type: "SL795",
-          costPerLot: baseCostPerTree * 1.1 * treesPerLot,
+          costPerLot: 1500,
           annualReturnPerLot: baseReturnPerTreePerYear * 1.1 * treesPerLot,
           cultivationPeriod: 3,
         },
         {
           type: "Typica",
-          costPerLot: baseCostPerTree * 1.3 * treesPerLot,
+          costPerLot: 2000,
           annualReturnPerLot: baseReturnPerTreePerYear * 1.3 * treesPerLot,
           cultivationPeriod: 4,
         },
         {
           type: "Catuai",
-          costPerLot: baseCostPerTree * 1.1 * treesPerLot,
+          costPerLot: 1500,
           annualReturnPerLot: baseReturnPerTreePerYear * 1.1 * treesPerLot,
           cultivationPeriod: 3,
         },
@@ -72,7 +72,7 @@ const lotInfo: {
       trees: [
         {
           type: "Catuai",
-          costPerLot: baseCostPerTree * treesPerLot,
+          costPerLot: 1200,
           annualReturnPerLot: baseReturnPerTreePerYear * treesPerLot,
           cultivationPeriod: 3,
         },
@@ -89,7 +89,7 @@ const lotInfo: {
       trees: [
         {
           type: "Liberica",
-          costPerLot: baseCostPerTree * 0.8 * treesPerLot,
+          costPerLot: 1200,
           annualReturnPerLot: baseReturnPerTreePerYear * 0.8 * treesPerLot,
           cultivationPeriod: 3,
         },
@@ -160,11 +160,13 @@ export default function OrderPage() {
       }
 
       console.log("Selected Offer:", selectedOffer);
-      const order = placeOrder({
+      const order : Order = {
         mintIndexInOffers: selectedOffer.mintIndex,
-        mint: selectedOffer.mintAddress,
+        mint: new PublicKey(selectedOffer.mintAddress),
         amount: numberOfLotsToPurchase,
-      })
+      }
+
+      console.log(await placeOrder(order))
 
       alert("Order placed successfully!");
     } catch (err) {

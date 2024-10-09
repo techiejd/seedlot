@@ -12,11 +12,11 @@ interface Offer {
 // Move this to DB
 // number in cents
 const priceList = {
-  "toraja-typica" : 2000,
-  "toraja-sl795" : 1500,
-  "toraja-catuai" : 1500,
-  "kintamani-catuai" : 1200,
-  "sarawak-liberica" : 1200
+  "toraja-typica" : 200000,
+  "toraja-sl795" : 150000,
+  "toraja-catuai" : 150000,
+  "kintamani-catuai" : 120000,
+  "sarawak-liberica" : 120000
 }
 
 
