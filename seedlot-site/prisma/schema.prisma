@@ -26,6 +26,8 @@ model User {
   createdAt     DateTime @default(now())
 
   UserCertification UserCertification[]
+
+  AvailableFarms AvailableFarms[]
 }
 model Certification {
   id         Int      @id @default(autoincrement())
@@ -47,4 +49,36 @@ model UserCertification {
 model ProgramContract {
   contractPK     String @id
   tokenProgramId String
+}
+
+model AvailableFarms {
+  id        Int    @id @default(autoincrement())
+  name      String
+  lat       Float
+  lon       Float
+  managerId Int
+  type      String
+  totalLots Int
+  manager   User   @relation(fields: [managerId], references: [id])
+  TreesAtFarm TreesAtFarm[]
+}
+
+
+model TreeVarieties {
+  id       Int    @id @default(autoincrement())
+  name     String
+  type     String
+  imageSrc String
+  infolink String
+  TreesAtFarm TreesAtFarm[]
+}
+
+
+model TreesAtFarm {
+  farmId       Int
+  treeVarietyId Int
+  farm         AvailableFarms @relation(fields: [farmId], references: [id])
+  treeVariety  TreeVarieties  @relation(fields: [treeVarietyId], references: [id])
+
+  @@id([farmId, treeVarietyId])
 }

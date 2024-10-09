@@ -2,14 +2,14 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { getUsersByRole } from "./../../repository/user/getUsers";
 
-interface Manager {
+interface Investor {
   name: string;
   walletAddress: string;
   lots: { length: number }[];
 }
 
 export default function InvestorsPage() {
-  const [investors, setInvestors] = useState<Manager[]>([]);
+  const [investors, setInvestors] = useState<Investor[]>([]);
 
   useEffect(() => {
     async function fetchInvestors() {
@@ -44,7 +44,7 @@ export default function InvestorsPage() {
               </tr>
             </thead>
             <tbody>
-              {investors.map((investor: Manager) => (
+              {investors.map((investor: Investor) => (
                 <tr key={investor.walletAddress} className="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
                   <td className="px-6 py-4">{investor.name}</td>
                   <td className="px-6 py-4">{investor.walletAddress}</td>
