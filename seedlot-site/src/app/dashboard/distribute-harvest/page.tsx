@@ -50,7 +50,7 @@ export default function DistributeHarvestPage() {
                 <td className="px-6 py-4">Ketut</td>
                 <td className="px-6 py-4">
                 {orderStatus &&
-                    orderStatus == "undestributed" && (
+                    orderStatus == "undistributed" && (
                     <button
                         onClick={() => handleDistributeFunds()}
                         disabled
